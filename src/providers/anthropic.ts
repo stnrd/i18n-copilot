@@ -1,4 +1,4 @@
-import { BaseTranslationProvider, ProviderConfig } from './base-provider.js';
+import { BaseTranslationProvider, ProviderConfig } from './base-provider';
 
 export interface AnthropicConfig extends ProviderConfig {
   apiKey: string;

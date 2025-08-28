@@ -1,4 +1,4 @@
-import { ConfigValidator } from '../config-validator.js';
+import { ConfigValidator } from '../config-validator';
 
 // Mock fs module for file system operations
 jest.mock('fs', () => ({

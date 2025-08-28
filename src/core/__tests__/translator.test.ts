@@ -2,8 +2,8 @@ import {
   TranslationOrchestrator,
   TranslationProvider,
   TranslationBatch,
-} from '../translator.js';
-import { Config } from '../../types/index.js';
+} from '../translator';
+import { Config } from '../../types/index';
 
 // Mock provider implementation
 class MockProvider implements TranslationProvider {

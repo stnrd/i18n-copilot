@@ -1,4 +1,4 @@
-import { TranslationParser, TranslationData } from '../parser.js';
+import { TranslationParser, TranslationData } from '../parser';
 import fs from 'fs/promises';
 
 // Mock fs module
