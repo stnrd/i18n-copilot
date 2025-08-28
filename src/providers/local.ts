@@ -1,4 +1,4 @@
-import { BaseTranslationProvider, ProviderConfig } from './base-provider';
+import { BaseTranslationProvider, ProviderConfig } from './base-provider.js';
 
 export interface LocalProviderConfig extends ProviderConfig {
   endpoint?: string;

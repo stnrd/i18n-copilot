@@ -11,7 +11,7 @@ import {
   ConfigValidator,
   Logger,
   defaultLogger,
-} from '../index';
+} from '../index.js';
 
 interface CLIConfig {
   watchPath: string;

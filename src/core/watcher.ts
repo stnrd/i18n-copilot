@@ -2,7 +2,7 @@ import chokidar, { FSWatcher } from 'chokidar';
 import { EventEmitter } from 'events';
 import path from 'path';
 import fs from 'fs/promises';
-import { Config } from '../types';
+import { Config } from '../types/index';
 
 export interface FileChangeEvent {
   type: 'add' | 'change' | 'unlink';

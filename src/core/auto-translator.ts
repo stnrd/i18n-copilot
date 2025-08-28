@@ -1,13 +1,13 @@
 import { EventEmitter } from 'events';
 import path from 'path';
 import fs from 'fs/promises';
-import { TranslationOrchestrator } from './translator';
-import { TranslationWatcher } from './watcher';
-import { Config } from '../types';
-import { defaultLogger, Logger } from '../utils/logger';
-import { OpenAIProvider } from '../providers/openai';
-import { AnthropicProvider } from '../providers/anthropic';
-import { LocalProvider } from '../providers/local';
+import { TranslationOrchestrator } from './translator.js';
+import { TranslationWatcher } from './watcher.js';
+import { Config } from '../types/index.js';
+import { defaultLogger, Logger } from '../utils/logger.js';
+import { OpenAIProvider } from '../providers/openai.js';
+import { AnthropicProvider } from '../providers/anthropic.js';
+import { LocalProvider } from '../providers/local.js';
 
 export interface AutoTranslatorOptions {
   logger?: Logger;

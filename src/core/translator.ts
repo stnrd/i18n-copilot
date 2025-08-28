@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
 import path from 'path';
 import fs from 'fs/promises';
-import { TranslationData, TranslationParser } from './parser';
-import { TranslationDiffDetector } from './diff-detector';
-import { Config } from '../types';
+import { TranslationData, TranslationParser } from './parser.js';
+import { TranslationDiffDetector } from './diff-detector.js';
+import { Config } from '../types/index.js';
 
 export interface TranslationRequest {
   key: string;

@@ -1,4 +1,4 @@
-import { TranslationData } from './parser';
+import { TranslationData } from './parser.js';
 
 export interface TranslationDiff {
   added: string[];

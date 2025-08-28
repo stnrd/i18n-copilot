@@ -1,5 +1,5 @@
-import { TranslationDiffDetector } from '../diff-detector';
-import { TranslationData } from '../parser';
+import { TranslationDiffDetector } from '../diff-detector.js';
+import { TranslationData } from '../parser.js';
 
 describe('TranslationDiffDetector', () => {
   let detector: TranslationDiffDetector;

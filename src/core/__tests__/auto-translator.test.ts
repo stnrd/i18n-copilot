@@ -1,5 +1,5 @@
-import { AutoTranslator } from '../auto-translator';
-import { Config } from '../../types';
+import { AutoTranslator } from '../auto-translator.js';
+import { Config } from '../../types/index.js';
 import fs from 'fs/promises';
 import { EventEmitter } from 'events';
 

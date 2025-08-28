@@ -1,12 +1,10 @@
-import { ConfigValidator } from '../config-validator';
+import { ConfigValidator } from '../config-validator.js';
 
 // Mock fs module for file system operations
-const mockedFs = {
+jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
   statSync: jest.fn().mockReturnValue({ isDirectory: () => true }),
-};
-
-jest.mock('fs', () => mockedFs);
+}));
 
 describe('ConfigValidator', () => {
   let validator: ConfigValidator;
@@ -16,8 +14,10 @@ describe('ConfigValidator', () => {
     jest.clearAllMocks();
 
     // Reset fs mocks to default values
-    mockedFs.existsSync.mockReturnValue(true);
-    mockedFs.statSync.mockReturnValue({ isDirectory: () => true });
+    // eslint-disable-next-line
+    const fs = jest.mocked(require('fs'));
+    fs.existsSync.mockReturnValue(true);
+    fs.statSync.mockReturnValue({ isDirectory: () => true });
   });
 
   describe('constructor', () => {
@@ -212,7 +212,9 @@ describe('ConfigValidator', () => {
 
   describe('business logic validation', () => {
     it('should validate watch path existence', () => {
-      mockedFs.existsSync.mockReturnValue(false);
+      // eslint-disable-next-line
+      const fs = jest.mocked(require('fs'));
+      fs.existsSync.mockReturnValue(false);
 
       const config = {
         watchPath: '/nonexistent/path',
@@ -232,8 +234,10 @@ describe('ConfigValidator', () => {
     });
 
     it('should validate watch path is a directory', () => {
-      mockedFs.existsSync.mockReturnValue(true);
-      mockedFs.statSync.mockReturnValue({ isDirectory: () => false });
+      // eslint-disable-next-line
+      const fs = jest.mocked(require('fs'));
+      fs.existsSync.mockReturnValue(true);
+      fs.statSync.mockReturnValue({ isDirectory: () => false });
 
       const config = {
         watchPath: '/path/to/file.txt',
@@ -444,7 +448,9 @@ describe('ConfigValidator', () => {
 
   describe('edge cases and error handling', () => {
     it('should handle fs module errors gracefully', () => {
-      mockedFs.existsSync.mockImplementation(() => {
+      // eslint-disable-next-line
+      const fs = jest.mocked(require('fs'));
+      fs.existsSync.mockImplementation(() => {
         throw new Error('Permission denied');
       });
 

@@ -3,8 +3,8 @@ export {
   TranslationWatcher,
   type FileChangeEvent,
   type WatcherOptions,
-} from './core/watcher';
-export { type Config } from './types';
+} from './core/watcher.js';
+export { type Config } from './types/index.js';
 
 // Parser exports
 export {
@@ -12,7 +12,7 @@ export {
   type TranslationData,
   type ParsedFile,
   type ParserOptions,
-} from './core/parser';
+} from './core/parser.js';
 
 // Diff detector exports
 export {
@@ -20,7 +20,7 @@ export {
   type TranslationDiff,
   type DiffOptions,
   type DiffResult,
-} from './core/diff-detector';
+} from './core/diff-detector.js';
 
 // Translator exports
 export {
@@ -30,14 +30,14 @@ export {
   type TranslationBatch,
   type TranslatorOptions,
   type TranslationProvider,
-} from './core/translator';
+} from './core/translator.js';
 
 // Translation Manager exports
 export {
   AutoTranslator,
   type AutoTranslatorOptions,
   type TranslationResult,
-} from './core/auto-translator';
+} from './core/auto-translator.js';
 
 // Utility exports
 export {
@@ -46,7 +46,7 @@ export {
   type ValidationResult,
   type ValidationRule,
   type ValidationSchema,
-} from './utils/config-validator';
+} from './utils/config-validator.js';
 
 export {
   Logger,
@@ -55,34 +55,34 @@ export {
   type LogEntry,
   type LoggerOptions,
   type LogFormatter,
-} from './utils/logger';
+} from './utils/logger.js';
 
 // Provider exports
 export {
   BaseTranslationProvider,
   type ProviderConfig,
-} from './providers/base-provider';
+} from './providers/base-provider.js';
 
 export {
   OpenAIProvider,
   type OpenAIConfig,
   type OpenAITranslationOptions,
-} from './providers/openai';
+} from './providers/openai.js';
 
 export {
   AnthropicProvider,
   type AnthropicConfig,
   type AnthropicTranslationOptions,
-} from './providers/anthropic';
+} from './providers/anthropic.js';
 
 export {
   LocalProvider,
   type LocalProviderConfig,
   type LocalTranslationOptions,
-} from './providers/local';
+} from './providers/local.js';
 
 // CLI export
-export { TranslationCLI } from './cli/index';
+export { TranslationCLI } from './cli/index.js';
 
 // Default export for convenience
-export { default } from './core/watcher';
+export { default } from './core/watcher.js';
