@@ -1,4 +1,4 @@
-# Next Quick Translator
+# i18n-copilot
 
 AI-powered translation file watcher and translator that automatically translates new keys from your base language to target languages using configurable LLM providers.
 
@@ -19,7 +19,6 @@ The project has been refactored to separate concerns and improve maintainability
 - **`OpenAIProvider`** - Uses OpenAI's GPT models for translation
 - **`AnthropicProvider`** - Uses Anthropic's Claude models for translation
 - **`LocalProvider`** - Uses local models (e.g., Ollama) for translation
-- **`MockProvider`** - Mock provider for testing and development
 
 ### CLI
 
@@ -129,39 +128,39 @@ Create a `translation-config.json` file:
 
 ```bash
 # Start watching for changes
-translation-watcher watch
+i18n-copilot watch
 
 # With custom config
-translation-watcher watch -c ./my-config.json
+i18n-copilot watch -c ./my-config.json
 
 # With CLI options
-translation-watcher watch -p ./locales -b en -t fr,de,es --provider openai
+i18n-copilot watch -p ./locales -b en -t fr,de,es --provider openai
 ```
 
 ### Manual Translation
 
 ```bash
 # Translate a specific file
-translation-watcher translate ./locales/en.json
+i18n-copilot translate ./locales/en.json
 
 # With custom config
-translation-watcher translate ./locales/en.json -c ./my-config.json
+i18n-copilot translate ./locales/en.json -c ./my-config.json
 ```
 
 ### Other Commands
 
 ```bash
 # Validate configuration
-translation-watcher validate -c ./translation-config.json
+i18n-copilot validate -c ./translation-config.json
 
 # Show status
-translation-watcher status
+i18n-copilot status
 
 # Stop watcher
-translation-watcher stop
+i18n-copilot stop
 
 # Initialize new project
-translation-watcher init -p ./my-project --base en --targets fr,de,es
+i18n-copilot init -p ./my-project --base en --targets fr,de,es
 ```
 
 ## 🔧 Development
