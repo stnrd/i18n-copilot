@@ -1,6 +1,6 @@
-import fs from "fs/promises";
-import path from "path";
-import yaml from "yaml";
+import fs from 'fs/promises';
+import path from 'path';
+import yaml from 'yaml';
 
 export interface TranslationData {
   [key: string]: string | TranslationData;
@@ -8,7 +8,7 @@ export interface TranslationData {
 
 export interface ParsedFile {
   data: TranslationData;
-  format: "json" | "yaml" | "js" | "ts";
+  format: 'json' | 'yaml' | 'js' | 'ts';
   originalContent: string;
   path: string;
 }
@@ -38,7 +38,7 @@ export class TranslationParser {
    */
   async parseFile(filePath: string): Promise<ParsedFile> {
     try {
-      const content = await fs.readFile(filePath, "utf-8");
+      const content = await fs.readFile(filePath, 'utf-8');
       const format = this.detectFormat(filePath);
 
       const data = await this.parseContent(content, format, filePath);
@@ -63,12 +63,12 @@ export class TranslationParser {
     filePath?: string
   ): Promise<TranslationData> {
     switch (format) {
-      case "json":
+      case 'json':
         return this.parseJSON(content);
-      case "yaml":
+      case 'yaml':
         return this.parseYAML(content);
-      case "js":
-      case "ts":
+      case 'js':
+      case 'ts':
         return this.parseJavaScript(content, filePath);
       default:
         throw new Error(`Unsupported format: ${format}`);
@@ -78,19 +78,19 @@ export class TranslationParser {
   /**
    * Detect file format from extension
    */
-  detectFormat(filePath: string): "json" | "yaml" | "js" | "ts" {
+  detectFormat(filePath: string): 'json' | 'yaml' | 'js' | 'ts' {
     const ext = path.extname(filePath).toLowerCase();
 
     switch (ext) {
-      case ".json":
-        return "json";
-      case ".yaml":
-      case ".yml":
-        return "yaml";
-      case ".js":
-        return "js";
-      case ".ts":
-        return "ts";
+      case '.json':
+        return 'json';
+      case '.yaml':
+      case '.yml':
+        return 'yaml';
+      case '.js':
+        return 'js';
+      case '.ts':
+        return 'ts';
       default:
         throw new Error(`Unsupported file extension: ${ext}`);
     }
@@ -102,7 +102,7 @@ export class TranslationParser {
   private parseJSON(content: string): TranslationData {
     try {
       // Remove BOM if present
-      const cleanContent = content.replace(/^\uFEFF/, "");
+      const cleanContent = content.replace(/^\uFEFF/, '');
 
       if (this.options.strictMode) {
         return JSON.parse(cleanContent);
@@ -128,8 +128,8 @@ export class TranslationParser {
     try {
       const result = yaml.parse(content);
 
-      if (typeof result !== "object" || result === null) {
-        throw new Error("YAML must contain an object");
+      if (typeof result !== 'object' || result === null) {
+        throw new Error('YAML must contain an object');
       }
 
       return result as TranslationData;
@@ -151,18 +151,18 @@ export class TranslationParser {
 
       // Use Function constructor for safer evaluation
       const evaluateFunction = new Function(
-        "module",
-        "exports",
-        "require",
-        cleanContent + "\nreturn module.exports || exports;"
+        'module',
+        'exports',
+        'require',
+        cleanContent + '\nreturn module.exports || exports;'
       );
 
       const result = evaluateFunction({}, {}, () => {
-        throw new Error("require() is not allowed in translation files");
+        throw new Error('require() is not allowed in translation files');
       });
 
-      if (typeof result !== "object" || result === null) {
-        throw new Error("JavaScript file must export an object");
+      if (typeof result !== 'object' || result === null) {
+        throw new Error('JavaScript file must export an object');
       }
 
       return result as TranslationData;
@@ -178,19 +178,19 @@ export class TranslationParser {
     let cleaned = content;
 
     // Remove export statements
-    cleaned = cleaned.replace(/export\s+(default\s+)?/g, "");
-    cleaned = cleaned.replace(/module\.exports\s*=\s*/, "");
-    cleaned = cleaned.replace(/export\s*\{[^}]*\}/g, "");
+    cleaned = cleaned.replace(/export\s+(default\s+)?/g, '');
+    cleaned = cleaned.replace(/module\.exports\s*=\s*/, '');
+    cleaned = cleaned.replace(/export\s*\{[^}]*\}/g, '');
 
     // Remove import statements
-    cleaned = cleaned.replace(/import\s+.*?from\s+['"][^'"]*['"];?\s*/g, "");
+    cleaned = cleaned.replace(/import\s+.*?from\s+['"][^'"]*['"];?\s*/g, '');
     cleaned = cleaned.replace(
       /import\s+\{[^}]*\}\s+from\s+['"][^'"]*['"];?\s*/g,
-      ""
+      ''
     );
 
     // Remove TypeScript type annotations
-    cleaned = cleaned.replace(/:\s*[a-zA-Z<>\[\]{}|&,()\s]+(?=\s*[,}])/g, "");
+    cleaned = cleaned.replace(/:\s*[a-zA-Z<>\[\]{}|&,()\s]+(?=\s*[,}])/g, '');
 
     return cleaned;
   }
@@ -202,14 +202,14 @@ export class TranslationParser {
     let fixed = content;
 
     // Remove trailing commas
-    fixed = fixed.replace(/,(\s*[}\]])/g, "$1");
+    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
 
     // Fix single quotes to double quotes
     fixed = fixed.replace(/'/g, '"');
 
     // Remove comments (basic)
-    fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, "");
-    fixed = fixed.replace(/\/\/.*$/gm, "");
+    fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '');
+    fixed = fixed.replace(/\/\/.*$/gm, '');
 
     // Fix unquoted keys
     fixed = fixed.replace(
@@ -223,15 +223,15 @@ export class TranslationParser {
   /**
    * Extract all translation keys from parsed data
    */
-  extractKeys(data: TranslationData, prefix = ""): string[] {
+  extractKeys(data: TranslationData, prefix = ''): string[] {
     const keys: string[] = [];
 
     for (const [key, value] of Object.entries(data)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
 
-      if (typeof value === "string") {
+      if (typeof value === 'string') {
         keys.push(fullKey);
-      } else if (typeof value === "object" && value !== null) {
+      } else if (typeof value === 'object' && value !== null) {
         keys.push(...this.extractKeys(value, fullKey));
       }
     }
@@ -243,31 +243,31 @@ export class TranslationParser {
    * Get nested value by dot notation key
    */
   getNestedValue(data: TranslationData, key: string): string | undefined {
-    const keys = key.split(".");
+    const keys = key.split('.');
     let current: any = data;
 
     for (const k of keys) {
-      if (current && typeof current === "object" && k in current) {
+      if (current && typeof current === 'object' && k in current) {
         current = current[k];
       } else {
         return undefined;
       }
     }
 
-    return typeof current === "string" ? current : undefined;
+    return typeof current === 'string' ? current : undefined;
   }
 
   /**
    * Set nested value by dot notation key
    */
   setNestedValue(data: TranslationData, key: string, value: string): void {
-    const keys = key.split(".");
+    const keys = key.split('.');
     let current: any = data;
 
     // Navigate to the parent of the target key
     for (let i = 0; i < keys.length - 1; i++) {
       const k = keys[i];
-      if (k && (!(k in current) || typeof current[k] !== "object")) {
+      if (k && (!(k in current) || typeof current[k] !== 'object')) {
         current[k] = {};
       }
       if (k) {
@@ -288,15 +288,15 @@ export class TranslationParser {
   mergeTranslations(
     base: TranslationData,
     updates: TranslationData,
-    strategy: "replace" | "merge" | "preserve" = "merge"
+    strategy: 'replace' | 'merge' | 'preserve' = 'merge'
   ): TranslationData {
     const result = { ...base };
 
     for (const [key, value] of Object.entries(updates)) {
-      if (strategy === "replace") {
+      if (strategy === 'replace') {
         result[key] = value;
-      } else if (strategy === "merge") {
-        if (typeof value === "object" && typeof result[key] === "object") {
+      } else if (strategy === 'merge') {
+        if (typeof value === 'object' && typeof result[key] === 'object') {
           result[key] = this.mergeTranslations(
             result[key] as TranslationData,
             value as TranslationData,
@@ -305,7 +305,7 @@ export class TranslationParser {
         } else {
           result[key] = value;
         }
-      } else if (strategy === "preserve") {
+      } else if (strategy === 'preserve') {
         if (!(key in result)) {
           result[key] = value;
         }
@@ -325,18 +325,18 @@ export class TranslationParser {
     const errors: string[] = [];
 
     const validateNode = (node: any, path: string): void => {
-      if (typeof node === "string") {
+      if (typeof node === 'string') {
         // String values are valid
         return;
       }
 
-      if (typeof node === "object" && node !== null) {
+      if (typeof node === 'object' && node !== null) {
         for (const [key, value] of Object.entries(node)) {
           const fullPath = path ? `${path}.${key}` : key;
 
-          if (typeof value === "string") {
+          if (typeof value === 'string') {
             // String values are valid
-          } else if (typeof value === "object" && value !== null) {
+          } else if (typeof value === 'object' && value !== null) {
             validateNode(value, fullPath);
           } else {
             errors.push(`Invalid value type at ${fullPath}: ${typeof value}`);
@@ -347,7 +347,7 @@ export class TranslationParser {
       }
     };
 
-    validateNode(data, "");
+    validateNode(data, '');
 
     return {
       isValid: errors.length === 0,
@@ -360,17 +360,17 @@ export class TranslationParser {
    */
   stringify(
     data: TranslationData,
-    format: "json" | "yaml" | "js",
+    format: 'json' | 'yaml' | 'js',
     options?: { indent?: number; preserveFormatting?: boolean }
   ): string {
     const indent = options?.indent ?? 2;
 
     switch (format) {
-      case "json":
+      case 'json':
         return JSON.stringify(data, null, indent);
-      case "yaml":
+      case 'yaml':
         return yaml.stringify(data, { indent });
-      case "js":
+      case 'js':
         return `module.exports = ${JSON.stringify(data, null, indent)};`;
       default:
         throw new Error(`Unsupported output format: ${format}`);

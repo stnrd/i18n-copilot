@@ -1,6 +1,6 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from 'events';
 
-export type LogLevel = "debug" | "info" | "warn" | "error";
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface LogEntry {
   timestamp: Date;
@@ -13,10 +13,10 @@ export interface LogEntry {
 
 export interface LoggerOptions {
   level?: LogLevel;
-  format?: "json" | "text" | "simple";
+  format?: 'json' | 'text' | 'simple';
   timestamp?: boolean;
   colors?: boolean;
-  output?: "console" | "file" | "both";
+  output?: 'console' | 'file' | 'both';
   filePath?: string;
   maxFileSize?: number;
   maxFiles?: number;
@@ -60,7 +60,7 @@ export class ConsoleFormatter implements LogFormatter {
       parts.push(this.formatError(entry.error));
     }
 
-    return parts.join(" ");
+    return parts.join(' ');
   }
 
   private formatTimestamp(date: Date): string {
@@ -73,13 +73,13 @@ export class ConsoleFormatter implements LogFormatter {
     }
 
     const colors = {
-      debug: "\x1b[36m", // Cyan
-      info: "\x1b[32m", // Green
-      warn: "\x1b[33m", // Yellow
-      error: "\x1b[31m", // Red
+      debug: '\x1b[36m', // Cyan
+      info: '\x1b[32m', // Green
+      warn: '\x1b[33m', // Yellow
+      error: '\x1b[31m', // Red
     };
 
-    const reset = "\x1b[0m";
+    const reset = '\x1b[0m';
     return `${colors[level]}[${level.toUpperCase()}]${reset}`;
   }
 
@@ -92,8 +92,8 @@ export class ConsoleFormatter implements LogFormatter {
       return `\n  Error: ${error.message}`;
     }
 
-    const red = "\x1b[31m";
-    const reset = "\x1b[0m";
+    const red = '\x1b[31m';
+    const reset = '\x1b[0m';
     return `\n  ${red}Error: ${error.message}${reset}`;
   }
 }
@@ -128,7 +128,7 @@ export class SimpleFormatter implements LogFormatter {
 export class Logger extends EventEmitter {
   private level: LogLevel;
   private formatter: LogFormatter;
-  private output: "console" | "file" | "both";
+  private output: 'console' | 'file' | 'both';
   private filePath?: string;
   private maxFileSize: number;
   private maxFiles: number;
@@ -144,23 +144,23 @@ export class Logger extends EventEmitter {
   constructor(options: LoggerOptions = {}) {
     super();
 
-    this.level = (options.level as LogLevel) || "info";
-    this.output = options.output || "console";
-    this.filePath = options.filePath || "";
+    this.level = (options.level as LogLevel) || 'info';
+    this.output = options.output || 'console';
+    this.filePath = options.filePath || '';
     this.maxFileSize = options.maxFileSize || 10 * 1024 * 1024; // 10MB
     this.maxFiles = options.maxFiles || 5;
     this.includeContext = options.includeContext ?? true;
 
     // Set up formatter
-    const format: "json" | "text" | "simple" = options.format || "text";
+    const format: 'json' | 'text' | 'simple' = options.format || 'text';
     const colors = options.colors ?? true;
     const timestamp = options.timestamp ?? true;
 
     switch (format) {
-      case "json":
+      case 'json':
         this.formatter = new JsonFormatter();
         break;
-      case "simple":
+      case 'simple':
         this.formatter = new SimpleFormatter();
         break;
       default:
@@ -172,21 +172,21 @@ export class Logger extends EventEmitter {
    * Log a debug message
    */
   debug(message: string, context?: Record<string, any>, source?: string): void {
-    this.log("debug", message, context, source);
+    this.log('debug', message, context, source);
   }
 
   /**
    * Log an info message
    */
   info(message: string, context?: Record<string, any>, source?: string): void {
-    this.log("info", message, context, source);
+    this.log('info', message, context, source);
   }
 
   /**
    * Log a warning message
    */
   warn(message: string, context?: Record<string, any>, source?: string): void {
-    this.log("warn", message, context, source);
+    this.log('warn', message, context, source);
   }
 
   /**
@@ -198,7 +198,7 @@ export class Logger extends EventEmitter {
     context?: Record<string, any>,
     source?: string
   ): void {
-    this.log("error", message, context, source, error);
+    this.log('error', message, context, source, error);
   }
 
   /**
@@ -226,18 +226,18 @@ export class Logger extends EventEmitter {
     };
 
     // Emit log event
-    this.emit("log", entry);
+    this.emit('log', entry);
 
     // Format and output the log entry
     const formattedMessage = this.formatter.format(entry);
 
     // Console output
-    if (this.output === "console" || this.output === "both") {
+    if (this.output === 'console' || this.output === 'both') {
       this.writeToConsole(level, formattedMessage);
     }
 
     // File output
-    if (this.output === "file" || this.output === "both") {
+    if (this.output === 'file' || this.output === 'both') {
       this.writeToFile(formattedMessage);
     }
   }
@@ -247,16 +247,16 @@ export class Logger extends EventEmitter {
    */
   private writeToConsole(level: LogLevel, message: string): void {
     switch (level) {
-      case "debug":
+      case 'debug':
         console.debug(message);
         break;
-      case "info":
+      case 'info':
         console.info(message);
         break;
-      case "warn":
+      case 'warn':
         console.warn(message);
         break;
-      case "error":
+      case 'error':
         console.error(message);
         break;
     }
@@ -271,21 +271,21 @@ export class Logger extends EventEmitter {
     }
 
     try {
-      const fs = await import("fs/promises");
-      const path = await import("path");
+      const fs = await import('fs/promises');
+      const path = await import('path');
 
       // Ensure directory exists
       const dir = path.dirname(this.filePath);
       await fs.mkdir(dir, { recursive: true });
 
       // Append to file
-      await fs.appendFile(this.filePath, message + "\n", "utf-8");
+      await fs.appendFile(this.filePath, message + '\n', 'utf-8');
 
       // Check file size and rotate if needed
       await this.rotateLogFile();
     } catch (error) {
       // Fallback to console if file writing fails
-      console.error("Failed to write to log file:", error);
+      console.error('Failed to write to log file:', error);
       console.log(message);
     }
   }
@@ -299,8 +299,8 @@ export class Logger extends EventEmitter {
     }
 
     try {
-      const fs = await import("fs/promises");
-      const path = await import("path");
+      const fs = await import('fs/promises');
+      const path = await import('path');
 
       const stats = await fs.stat(this.filePath);
 
@@ -322,11 +322,11 @@ export class Logger extends EventEmitter {
         await fs.rename(this.filePath, rotatedFile);
 
         // Create new empty log file
-        await fs.writeFile(this.filePath, "", "utf-8");
+        await fs.writeFile(this.filePath, '', 'utf-8');
       }
     } catch (error) {
       // Ignore rotation errors
-      console.error("Log rotation failed:", error);
+      console.error('Log rotation failed:', error);
     }
   }
 
@@ -364,10 +364,10 @@ export class Logger extends EventEmitter {
    */
   async flush(): Promise<void> {
     // Emit flush event
-    this.emit("flush");
+    this.emit('flush');
 
     // Wait a bit for any async operations
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**
@@ -375,7 +375,7 @@ export class Logger extends EventEmitter {
    */
   async close(): Promise<void> {
     await this.flush();
-    this.emit("close");
+    this.emit('close');
   }
 }
 
@@ -430,8 +430,8 @@ export class ChildLogger {
 
 // Default logger instance
 export const defaultLogger = new Logger({
-  level: "info",
-  format: "text",
+  level: 'info',
+  format: 'text',
   colors: true,
   timestamp: true,
 });

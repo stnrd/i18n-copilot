@@ -1,20 +1,20 @@
-import { TranslationDiffDetector } from "../diff-detector";
-import { TranslationData } from "../parser";
+import { TranslationDiffDetector } from '../diff-detector';
+import { TranslationData } from '../parser';
 
-describe("TranslationDiffDetector", () => {
+describe('TranslationDiffDetector', () => {
   let detector: TranslationDiffDetector;
 
   beforeEach(() => {
     detector = new TranslationDiffDetector();
   });
 
-  describe("constructor", () => {
-    it("should create detector with default options", () => {
+  describe('constructor', () => {
+    it('should create detector with default options', () => {
       const defaultDetector = new TranslationDiffDetector();
       expect(defaultDetector).toBeInstanceOf(TranslationDiffDetector);
     });
 
-    it("should create detector with custom options", () => {
+    it('should create detector with custom options', () => {
       const customDetector = new TranslationDiffDetector({
         ignoreCase: true,
         ignoreWhitespace: false,
@@ -25,181 +25,181 @@ describe("TranslationDiffDetector", () => {
     });
   });
 
-  describe("detectDiff", () => {
-    it("should detect added keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1", key2: "value2" };
+  describe('detectDiff', () => {
+    it('should detect added keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1', key2: 'value2' };
 
       const result = detector.detectDiff(oldData, newData);
 
-      expect(result.diff.added).toEqual(["key2"]);
+      expect(result.diff.added).toEqual(['key2']);
       expect(result.diff.modified).toEqual([]);
       expect(result.diff.removed).toEqual([]);
-      expect(result.diff.unchanged).toEqual(["key1"]);
+      expect(result.diff.unchanged).toEqual(['key1']);
       expect(result.summary.addedCount).toBe(1);
       expect(result.summary.totalKeys).toBe(2);
     });
 
-    it("should detect modified keys", () => {
-      const oldData: TranslationData = { key1: "oldValue" };
-      const newData: TranslationData = { key1: "newValue" };
+    it('should detect modified keys', () => {
+      const oldData: TranslationData = { key1: 'oldValue' };
+      const newData: TranslationData = { key1: 'newValue' };
 
       const result = detector.detectDiff(oldData, newData);
 
       expect(result.diff.added).toEqual([]);
-      expect(result.diff.modified).toEqual(["key1"]);
+      expect(result.diff.modified).toEqual(['key1']);
       expect(result.diff.removed).toEqual([]);
       expect(result.diff.unchanged).toEqual([]);
       expect(result.summary.modifiedCount).toBe(1);
     });
 
-    it("should detect removed keys", () => {
-      const oldData: TranslationData = { key1: "value1", key2: "value2" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should detect removed keys', () => {
+      const oldData: TranslationData = { key1: 'value1', key2: 'value2' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const result = detector.detectDiff(oldData, newData);
 
       expect(result.diff.added).toEqual([]);
       expect(result.diff.modified).toEqual([]);
-      expect(result.diff.removed).toEqual(["key2"]);
-      expect(result.diff.unchanged).toEqual(["key1"]);
+      expect(result.diff.removed).toEqual(['key2']);
+      expect(result.diff.unchanged).toEqual(['key1']);
       expect(result.summary.removedCount).toBe(1);
     });
 
-    it("should detect unchanged keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should detect unchanged keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const result = detector.detectDiff(oldData, newData);
 
       expect(result.diff.added).toEqual([]);
       expect(result.diff.modified).toEqual([]);
       expect(result.diff.removed).toEqual([]);
-      expect(result.diff.unchanged).toEqual(["key1"]);
+      expect(result.diff.unchanged).toEqual(['key1']);
       expect(result.summary.unchangedCount).toBe(1);
     });
 
-    it("should handle nested structures", () => {
+    it('should handle nested structures', () => {
       const oldData: TranslationData = {
         level1: {
-          level2: { key: "value" },
+          level2: { key: 'value' },
         },
       };
       const newData: TranslationData = {
         level1: {
-          level2: { key: "newValue" },
+          level2: { key: 'newValue' },
         },
       };
 
       const result = detector.detectDiff(oldData, newData);
 
-      expect(result.diff.modified).toEqual(["level1.level2.key"]);
+      expect(result.diff.modified).toEqual(['level1.level2.key']);
       expect(result.summary.modifiedCount).toBe(1);
     });
 
-    it("should handle complex changes", () => {
+    it('should handle complex changes', () => {
       const oldData: TranslationData = {
-        key1: "value1",
-        key2: "value2",
-        nested: { deep: "value" },
+        key1: 'value1',
+        key2: 'value2',
+        nested: { deep: 'value' },
       };
       const newData: TranslationData = {
-        key1: "newValue1",
-        key3: "value3",
-        nested: { deep: "newValue" },
+        key1: 'newValue1',
+        key3: 'value3',
+        nested: { deep: 'newValue' },
       };
 
       const result = detector.detectDiff(oldData, newData);
 
-      expect(result.diff.added).toEqual(["key3"]);
-      expect(result.diff.modified).toEqual(["key1", "nested.deep"]);
-      expect(result.diff.removed).toEqual(["key2"]);
+      expect(result.diff.added).toEqual(['key3']);
+      expect(result.diff.modified).toEqual(['key1', 'nested.deep']);
+      expect(result.diff.removed).toEqual(['key2']);
       expect(result.diff.unchanged).toEqual([]);
     });
 
-    it("should respect ignoreWhitespace option", () => {
+    it('should respect ignoreWhitespace option', () => {
       const whitespaceDetector = new TranslationDiffDetector({
         ignoreWhitespace: false,
       });
-      const oldData: TranslationData = { key: "value" };
-      const newData: TranslationData = { key: " value " };
+      const oldData: TranslationData = { key: 'value' };
+      const newData: TranslationData = { key: ' value ' };
 
       const result = whitespaceDetector.detectDiff(oldData, newData);
 
-      expect(result.diff.modified).toEqual(["key"]);
+      expect(result.diff.modified).toEqual(['key']);
     });
 
-    it("should respect ignoreCase option", () => {
+    it('should respect ignoreCase option', () => {
       const caseDetector = new TranslationDiffDetector({ ignoreCase: true });
-      const oldData: TranslationData = { key: "Value" };
-      const newData: TranslationData = { key: "value" };
+      const oldData: TranslationData = { key: 'Value' };
+      const newData: TranslationData = { key: 'value' };
 
       const result = caseDetector.detectDiff(oldData, newData);
 
       expect(result.diff.modified).toEqual([]);
-      expect(result.diff.unchanged).toEqual(["key"]);
+      expect(result.diff.unchanged).toEqual(['key']);
     });
   });
 
-  describe("detectNewKeys", () => {
-    it("should detect only new keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
+  describe('detectNewKeys', () => {
+    it('should detect only new keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
       const newData: TranslationData = {
-        key1: "value1",
-        key2: "value2",
-        key3: "value3",
+        key1: 'value1',
+        key2: 'value2',
+        key3: 'value3',
       };
 
       const newKeys = detector.detectNewKeys(oldData, newData);
 
-      expect(newKeys).toEqual(["key2", "key3"]);
+      expect(newKeys).toEqual(['key2', 'key3']);
     });
 
-    it("should return empty array when no new keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should return empty array when no new keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const newKeys = detector.detectNewKeys(oldData, newData);
 
       expect(newKeys).toEqual([]);
     });
 
-    it("should handle nested structures", () => {
+    it('should handle nested structures', () => {
       const oldData: TranslationData = {
-        level1: { key1: "value1" },
+        level1: { key1: 'value1' },
       };
       const newData: TranslationData = {
-        level1: { key1: "value1", key2: "value2" },
+        level1: { key1: 'value1', key2: 'value2' },
       };
 
       const newKeys = detector.detectNewKeys(oldData, newData);
 
-      expect(newKeys).toEqual(["level1.key2"]);
+      expect(newKeys).toEqual(['level1.key2']);
     });
   });
 
-  describe("detectModifiedKeys", () => {
-    it("should detect only modified keys", () => {
-      const oldData: TranslationData = { key1: "oldValue", key2: "value2" };
-      const newData: TranslationData = { key1: "newValue", key2: "value2" };
+  describe('detectModifiedKeys', () => {
+    it('should detect only modified keys', () => {
+      const oldData: TranslationData = { key1: 'oldValue', key2: 'value2' };
+      const newData: TranslationData = { key1: 'newValue', key2: 'value2' };
 
       const modifiedKeys = detector.detectModifiedKeys(oldData, newData);
 
-      expect(modifiedKeys).toEqual(["key1"]);
+      expect(modifiedKeys).toEqual(['key1']);
     });
 
-    it("should return empty array when no modified keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should return empty array when no modified keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const modifiedKeys = detector.detectModifiedKeys(oldData, newData);
 
       expect(modifiedKeys).toEqual([]);
     });
 
-    it("should not include new keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1", key2: "value2" };
+    it('should not include new keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1', key2: 'value2' };
 
       const modifiedKeys = detector.detectModifiedKeys(oldData, newData);
 
@@ -207,63 +207,63 @@ describe("TranslationDiffDetector", () => {
     });
   });
 
-  describe("generateDiffReport", () => {
-    it("should generate report for added keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1", key2: "value2" };
+  describe('generateDiffReport', () => {
+    it('should generate report for added keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1', key2: 'value2' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const report = detector.generateDiffReport(diffResult);
 
-      expect(report).toContain("Added Keys:");
-      expect(report).toContain("+ key2");
-      expect(report).toContain("Added: 1");
+      expect(report).toContain('Added Keys:');
+      expect(report).toContain('+ key2');
+      expect(report).toContain('Added: 1');
     });
 
-    it("should generate report for modified keys", () => {
-      const oldData: TranslationData = { key1: "oldValue" };
-      const newData: TranslationData = { key1: "newValue" };
+    it('should generate report for modified keys', () => {
+      const oldData: TranslationData = { key1: 'oldValue' };
+      const newData: TranslationData = { key1: 'newValue' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const report = detector.generateDiffReport(diffResult);
 
-      expect(report).toContain("Modified Keys:");
-      expect(report).toContain("~ key1");
+      expect(report).toContain('Modified Keys:');
+      expect(report).toContain('~ key1');
       expect(report).toContain('Old: "oldValue"');
       expect(report).toContain('New: "newValue"');
     });
 
-    it("should generate report for removed keys", () => {
-      const oldData: TranslationData = { key1: "value1", key2: "value2" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should generate report for removed keys', () => {
+      const oldData: TranslationData = { key1: 'value1', key2: 'value2' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const report = detector.generateDiffReport(diffResult);
 
-      expect(report).toContain("Removed Keys:");
-      expect(report).toContain("- key2");
-      expect(report).toContain("Removed: 1");
+      expect(report).toContain('Removed Keys:');
+      expect(report).toContain('- key2');
+      expect(report).toContain('Removed: 1');
     });
 
-    it("should include summary statistics", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "newValue", key2: "value2" };
+    it('should include summary statistics', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'newValue', key2: 'value2' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const report = detector.generateDiffReport(diffResult);
 
-      expect(report).toContain("Total keys: 2");
-      expect(report).toContain("Added: 1");
-      expect(report).toContain("Modified: 1");
-      expect(report).toContain("Removed: 0");
-      expect(report).toContain("Unchanged: 0");
+      expect(report).toContain('Total keys: 2');
+      expect(report).toContain('Added: 1');
+      expect(report).toContain('Modified: 1');
+      expect(report).toContain('Removed: 0');
+      expect(report).toContain('Unchanged: 0');
     });
   });
 
-  describe("hasChanges", () => {
-    it("should return true when there are changes", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "newValue" };
+  describe('hasChanges', () => {
+    it('should return true when there are changes', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'newValue' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const hasChanges = detector.hasChanges(diffResult);
@@ -271,9 +271,9 @@ describe("TranslationDiffDetector", () => {
       expect(hasChanges).toBe(true);
     });
 
-    it("should return false when there are no changes", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should return false when there are no changes', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const hasChanges = detector.hasChanges(diffResult);
@@ -281,9 +281,9 @@ describe("TranslationDiffDetector", () => {
       expect(hasChanges).toBe(false);
     });
 
-    it("should return true for added keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1", key2: "value2" };
+    it('should return true for added keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1', key2: 'value2' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const hasChanges = detector.hasChanges(diffResult);
@@ -291,9 +291,9 @@ describe("TranslationDiffDetector", () => {
       expect(hasChanges).toBe(true);
     });
 
-    it("should return true for removed keys", () => {
-      const oldData: TranslationData = { key1: "value1", key2: "value2" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should return true for removed keys', () => {
+      const oldData: TranslationData = { key1: 'value1', key2: 'value2' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const hasChanges = detector.hasChanges(diffResult);
@@ -302,21 +302,21 @@ describe("TranslationDiffDetector", () => {
     });
   });
 
-  describe("getKeysNeedingTranslation", () => {
-    it("should return added and modified keys", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "newValue", key2: "value2" };
+  describe('getKeysNeedingTranslation', () => {
+    it('should return added and modified keys', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'newValue', key2: 'value2' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const keysNeedingTranslation =
         detector.getKeysNeedingTranslation(diffResult);
 
-      expect(keysNeedingTranslation).toEqual(["key2", "key1"]);
+      expect(keysNeedingTranslation).toEqual(['key2', 'key1']);
     });
 
-    it("should return empty array when no changes", () => {
-      const oldData: TranslationData = { key1: "value1" };
-      const newData: TranslationData = { key1: "value1" };
+    it('should return empty array when no changes', () => {
+      const oldData: TranslationData = { key1: 'value1' };
+      const newData: TranslationData = { key1: 'value1' };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const keysNeedingTranslation =
@@ -326,42 +326,42 @@ describe("TranslationDiffDetector", () => {
     });
   });
 
-  describe("filterDiffByPattern", () => {
-    it("should filter by string pattern", () => {
+  describe('filterDiffByPattern', () => {
+    it('should filter by string pattern', () => {
       const oldData: TranslationData = {
-        "user.name": "John",
-        "user.email": "john@example.com",
-        "app.title": "My App",
+        'user.name': 'John',
+        'user.email': 'john@example.com',
+        'app.title': 'My App',
       };
       const newData: TranslationData = {
-        "user.name": "Jane",
-        "user.email": "jane@example.com",
-        "app.title": "My App",
+        'user.name': 'Jane',
+        'user.email': 'jane@example.com',
+        'app.title': 'My App',
       };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const filteredResult = detector.filterDiffByPattern(
         diffResult,
-        "user\\."
+        'user\\.'
       );
 
       // The current implementation treats dot-notation keys as added, not modified
-      expect(filteredResult.diff.added).toEqual(["user.name", "user.email"]);
+      expect(filteredResult.diff.added).toEqual(['user.name', 'user.email']);
       expect(filteredResult.diff.modified).toEqual([]);
       expect(filteredResult.diff.removed).toEqual([]);
       expect(filteredResult.diff.unchanged).toEqual([]);
     });
 
-    it("should filter by regex pattern", () => {
+    it('should filter by regex pattern', () => {
       const oldData: TranslationData = {
-        "user.name": "John",
-        "user.email": "john@example.com",
-        "app.title": "My App",
+        'user.name': 'John',
+        'user.email': 'john@example.com',
+        'app.title': 'My App',
       };
       const newData: TranslationData = {
-        "user.name": "Jane",
-        "user.email": "jane@example.com",
-        "app.title": "My App",
+        'user.name': 'Jane',
+        'user.email': 'jane@example.com',
+        'app.title': 'My App',
       };
 
       const diffResult = detector.detectDiff(oldData, newData);
@@ -371,26 +371,26 @@ describe("TranslationDiffDetector", () => {
       );
 
       // The current implementation treats dot-notation keys as added, not modified
-      expect(filteredResult.diff.added).toEqual(["user.name", "user.email"]);
+      expect(filteredResult.diff.added).toEqual(['user.name', 'user.email']);
       expect(filteredResult.diff.modified).toEqual([]);
       expect(filteredResult.diff.removed).toEqual([]);
       expect(filteredResult.diff.unchanged).toEqual([]);
     });
 
-    it("should recalculate summary after filtering", () => {
+    it('should recalculate summary after filtering', () => {
       const oldData: TranslationData = {
-        "user.name": "John",
-        "app.title": "My App",
+        'user.name': 'John',
+        'app.title': 'My App',
       };
       const newData: TranslationData = {
-        "user.name": "Jane",
-        "app.title": "My App",
+        'user.name': 'Jane',
+        'app.title': 'My App',
       };
 
       const diffResult = detector.detectDiff(oldData, newData);
       const filteredResult = detector.filterDiffByPattern(
         diffResult,
-        "user\\."
+        'user\\.'
       );
 
       // Only "user.name" should match the pattern and be added (not modified)
@@ -401,8 +401,8 @@ describe("TranslationDiffDetector", () => {
     });
   });
 
-  describe("edge cases", () => {
-    it("should handle empty objects", () => {
+  describe('edge cases', () => {
+    it('should handle empty objects', () => {
       const oldData: TranslationData = {};
       const newData: TranslationData = {};
 
@@ -415,9 +415,9 @@ describe("TranslationDiffDetector", () => {
       expect(result.diff.unchanged).toEqual([]);
     });
 
-    it("should handle null values", () => {
+    it('should handle null values', () => {
       const oldData: any = { key: null };
-      const newData: any = { key: "value" };
+      const newData: any = { key: 'value' };
 
       const result = detector.detectDiff(oldData, newData);
 
@@ -426,9 +426,9 @@ describe("TranslationDiffDetector", () => {
       expect(result.diff.modified).toEqual([]);
     });
 
-    it("should handle undefined values", () => {
+    it('should handle undefined values', () => {
       const oldData: any = { key: undefined };
-      const newData: any = { key: "value" };
+      const newData: any = { key: 'value' };
 
       const result = detector.detectDiff(oldData, newData);
 
@@ -437,13 +437,13 @@ describe("TranslationDiffDetector", () => {
       expect(result.diff.modified).toEqual([]);
     });
 
-    it("should handle very deep nesting", () => {
+    it('should handle very deep nesting', () => {
       const oldData: TranslationData = {
         level1: {
           level2: {
             level3: {
               level4: {
-                level5: { key: "value" },
+                level5: { key: 'value' },
               },
             },
           },
@@ -454,7 +454,7 @@ describe("TranslationDiffDetector", () => {
           level2: {
             level3: {
               level4: {
-                level5: { key: "newValue" },
+                level5: { key: 'newValue' },
               },
             },
           },
@@ -464,7 +464,7 @@ describe("TranslationDiffDetector", () => {
       const result = detector.detectDiff(oldData, newData);
 
       expect(result.diff.modified).toEqual([
-        "level1.level2.level3.level4.level5.key",
+        'level1.level2.level3.level4.level5.key',
       ]);
     });
   });

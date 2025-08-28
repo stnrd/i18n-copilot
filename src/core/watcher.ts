@@ -1,11 +1,11 @@
-import chokidar, { FSWatcher } from "chokidar";
-import { EventEmitter } from "events";
-import path from "path";
-import fs from "fs/promises";
-import { Config } from "../types";
+import chokidar, { FSWatcher } from 'chokidar';
+import { EventEmitter } from 'events';
+import path from 'path';
+import fs from 'fs/promises';
+import { Config } from '../types';
 
 export interface FileChangeEvent {
-  type: "add" | "change" | "unlink";
+  type: 'add' | 'change' | 'unlink';
   filePath: string;
   language: string;
   timestamp: Date;
@@ -31,7 +31,7 @@ export class TranslationWatcher extends EventEmitter {
     this.config = config;
     this.options = {
       debounceMs: 300,
-      ignorePatterns: ["**/node_modules/**", "**/.git/**", "**/*.backup"],
+      ignorePatterns: ['**/node_modules/**', '**/.git/**', '**/*.backup'],
       followSymlinks: false,
       awaitWriteFinish: true,
       debug: false, // Default debug mode
@@ -39,7 +39,7 @@ export class TranslationWatcher extends EventEmitter {
     };
 
     // Log constructor details
-    this.debugLog("TranslationWatcher constructor called", {
+    this.debugLog('TranslationWatcher constructor called', {
       watchPath: this.config.watchPath,
       baseLanguage: this.config.baseLanguage,
       targetLanguages: this.config.targetLanguages,
@@ -54,7 +54,7 @@ export class TranslationWatcher extends EventEmitter {
   private debugLog(message: string, data?: any): void {
     if (this.options.debug) {
       const timestamp = new Date().toISOString();
-      console.log(`[WATCHER DEBUG ${timestamp}] ${message}`, data ? data : "");
+      console.log(`[WATCHER DEBUG ${timestamp}] ${message}`, data ? data : '');
     }
   }
 
@@ -62,20 +62,20 @@ export class TranslationWatcher extends EventEmitter {
    * Start watching for file changes
    */
   async start(): Promise<void> {
-    this.debugLog("Starting watcher...");
+    this.debugLog('Starting watcher...');
 
     if (this.isWatching) {
-      const error = "Watcher is already running";
-      this.debugLog("Start failed: " + error);
+      const error = 'Watcher is already running';
+      this.debugLog('Start failed: ' + error);
       throw new Error(error);
     }
 
     try {
-      this.debugLog("Validating watch path...");
+      this.debugLog('Validating watch path...');
       // Validate watch path exists
       await this.validateWatchPath();
 
-      this.debugLog("Initializing chokidar watcher...");
+      this.debugLog('Initializing chokidar watcher...');
       // Initialize chokidar watcher
       const watchOptions: any = {
         persistent: true,
@@ -84,11 +84,11 @@ export class TranslationWatcher extends EventEmitter {
 
       if (this.options.ignorePatterns) {
         watchOptions.ignored = this.options.ignorePatterns;
-        this.debugLog("Using ignore patterns:", this.options.ignorePatterns);
+        this.debugLog('Using ignore patterns:', this.options.ignorePatterns);
       }
       if (this.options.followSymlinks !== undefined) {
         watchOptions.followSymlinks = this.options.followSymlinks;
-        this.debugLog("Follow symlinks:", this.options.followSymlinks);
+        this.debugLog('Follow symlinks:', this.options.followSymlinks);
       }
       if (this.options.awaitWriteFinish) {
         watchOptions.awaitWriteFinish = {
@@ -96,25 +96,25 @@ export class TranslationWatcher extends EventEmitter {
           pollInterval: 100,
         };
         this.debugLog(
-          "Using awaitWriteFinish with stabilityThreshold: 100, pollInterval: 100"
+          'Using awaitWriteFinish with stabilityThreshold: 100, pollInterval: 100'
         );
       }
 
-      this.debugLog("Chokidar watch options:", watchOptions);
+      this.debugLog('Chokidar watch options:', watchOptions);
       this.watcher = chokidar.watch(this.config.watchPath, watchOptions);
 
       // Set up event listeners
-      this.debugLog("Setting up event listeners...");
+      this.debugLog('Setting up event listeners...');
       this.setupEventListeners();
 
       this.isWatching = true;
-      this.emit("started", { watchPath: this.config.watchPath });
+      this.emit('started', { watchPath: this.config.watchPath });
 
-      this.debugLog("Watcher started successfully");
+      this.debugLog('Watcher started successfully');
       console.log(`Started watching: ${this.config.watchPath}`);
     } catch (error) {
-      this.debugLog("Start failed with error:", error);
-      this.emit("error", error);
+      this.debugLog('Start failed with error:', error);
+      this.emit('error', error);
       throw error;
     }
   }
@@ -123,30 +123,30 @@ export class TranslationWatcher extends EventEmitter {
    * Stop watching for file changes
    */
   async stop(): Promise<void> {
-    this.debugLog("Stopping watcher...");
+    this.debugLog('Stopping watcher...');
 
     if (!this.isWatching || !this.watcher) {
-      this.debugLog("Watcher not running, nothing to stop");
+      this.debugLog('Watcher not running, nothing to stop');
       return;
     }
 
     try {
       // Clear all debounce timers
-      this.debugLog("Clearing debounce timers...");
+      this.debugLog('Clearing debounce timers...');
       this.clearAllDebounceTimers();
 
       // Close the watcher
-      this.debugLog("Closing chokidar watcher...");
+      this.debugLog('Closing chokidar watcher...');
       await this.watcher.close();
       this.watcher = null;
       this.isWatching = false;
 
-      this.emit("stopped");
-      this.debugLog("Watcher stopped successfully");
-      console.log("Stopped watching for file changes");
+      this.emit('stopped');
+      this.debugLog('Watcher stopped successfully');
+      console.log('Stopped watching for file changes');
     } catch (error) {
-      this.debugLog("Stop failed with error:", error);
-      this.emit("error", error);
+      this.debugLog('Stop failed with error:', error);
+      this.emit('error', error);
       throw error;
     }
   }
@@ -173,7 +173,7 @@ export class TranslationWatcher extends EventEmitter {
       watchPath: this.config.watchPath,
       targetLanguages: this.config.targetLanguages,
     };
-    this.debugLog("getStats() called, returning:", stats);
+    this.debugLog('getStats() called, returning:', stats);
     return stats;
   }
 
@@ -181,7 +181,7 @@ export class TranslationWatcher extends EventEmitter {
    * Add additional ignore patterns
    */
   addIgnorePatterns(patterns: string[]): void {
-    this.debugLog("Adding ignore patterns:", patterns);
+    this.debugLog('Adding ignore patterns:', patterns);
     if (this.watcher) {
       this.watcher.add(patterns);
     }
@@ -189,19 +189,19 @@ export class TranslationWatcher extends EventEmitter {
       ...(this.options.ignorePatterns || []),
       ...patterns,
     ];
-    this.debugLog("Updated ignore patterns:", this.options.ignorePatterns);
+    this.debugLog('Updated ignore patterns:', this.options.ignorePatterns);
   }
 
   /**
    * Remove ignore patterns
    */
   removeIgnorePatterns(patterns: string[]): void {
-    this.debugLog("Removing ignore patterns:", patterns);
+    this.debugLog('Removing ignore patterns:', patterns);
     this.options.ignorePatterns =
       this.options.ignorePatterns?.filter(
-        (pattern) => !patterns.includes(pattern)
+        pattern => !patterns.includes(pattern)
       ) || [];
-    this.debugLog("Updated ignore patterns:", this.options.ignorePatterns);
+    this.debugLog('Updated ignore patterns:', this.options.ignorePatterns);
   }
 
   private async validateWatchPath(): Promise<void> {
@@ -209,7 +209,7 @@ export class TranslationWatcher extends EventEmitter {
 
     try {
       const stats = await fs.stat(this.config.watchPath);
-      this.debugLog("Watch path stats:", {
+      this.debugLog('Watch path stats:', {
         isDirectory: stats.isDirectory(),
         isFile: stats.isFile(),
         size: stats.size,
@@ -223,16 +223,16 @@ export class TranslationWatcher extends EventEmitter {
 
       if (!stats.isDirectory()) {
         const error = `Watch path must be a directory: ${this.config.watchPath}`;
-        this.debugLog("Validation failed: " + error);
+        this.debugLog('Validation failed: ' + error);
         throw new Error(error);
       }
 
-      this.debugLog("Watch path validation successful");
+      this.debugLog('Watch path validation successful');
     } catch (error) {
-      this.debugLog("Validation error:", error);
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      this.debugLog('Validation error:', error);
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         const errorMsg = `Watch path does not exist: ${this.config.watchPath}`;
-        this.debugLog("Validation failed: " + errorMsg);
+        this.debugLog('Validation failed: ' + errorMsg);
         throw new Error(errorMsg);
       }
       throw error;
@@ -241,61 +241,61 @@ export class TranslationWatcher extends EventEmitter {
 
   private setupEventListeners(): void {
     if (!this.watcher) {
-      this.debugLog("setupEventListeners: No watcher available");
+      this.debugLog('setupEventListeners: No watcher available');
       return;
     }
 
-    this.debugLog("Setting up chokidar event listeners...");
+    this.debugLog('Setting up chokidar event listeners...');
 
     // File added
-    this.watcher.on("add", (filePath: string) => {
+    this.watcher.on('add', (filePath: string) => {
       this.debugLog(`Chokidar 'add' event: ${filePath}`);
-      this.handleFileChange("add", filePath);
+      this.handleFileChange('add', filePath);
     });
 
     // File changed
-    this.watcher.on("change", (filePath: string) => {
+    this.watcher.on('change', (filePath: string) => {
       this.debugLog(`Chokidar 'change' event: ${filePath}`);
-      this.handleFileChange("change", filePath);
+      this.handleFileChange('change', filePath);
     });
 
     // File removed
-    this.watcher.on("unlink", (filePath: string) => {
+    this.watcher.on('unlink', (filePath: string) => {
       this.debugLog(`Chokidar 'unlink' event: ${filePath}`);
-      this.handleFileChange("unlink", filePath);
+      this.handleFileChange('unlink', filePath);
     });
 
     // Watcher errors
-    this.watcher.on("error", (error: unknown) => {
-      this.debugLog("Chokidar error event:", error);
+    this.watcher.on('error', (error: unknown) => {
+      this.debugLog('Chokidar error event:', error);
       if (error instanceof Error) {
-        this.emit("error", error);
+        this.emit('error', error);
       } else {
-        this.emit("error", new Error(String(error)));
+        this.emit('error', new Error(String(error)));
       }
     });
 
     // Watcher ready
-    this.watcher.on("ready", () => {
+    this.watcher.on('ready', () => {
       this.debugLog("Chokidar 'ready' event fired");
-      this.emit("ready");
-      console.log("File watcher is ready");
+      this.emit('ready');
+      console.log('File watcher is ready');
     });
 
     // Additional chokidar events for debugging
-    this.watcher.on("raw", (event: string, path: string, details: any) => {
+    this.watcher.on('raw', (event: string, path: string, details: any) => {
       this.debugLog(`Chokidar 'raw' event: ${event} ${path}`, details);
     });
 
-    this.watcher.on("all", (event: string, path: string) => {
+    this.watcher.on('all', (event: string, path: string) => {
       this.debugLog(`Chokidar 'all' event: ${event} ${path}`);
     });
 
-    this.debugLog("Event listeners setup complete");
+    this.debugLog('Event listeners setup complete');
   }
 
   private handleFileChange(
-    type: "add" | "change" | "unlink",
+    type: 'add' | 'change' | 'unlink',
     filePath: string
   ): void {
     this.debugLog(`handleFileChange called: ${type} ${filePath}`);
@@ -354,7 +354,7 @@ export class TranslationWatcher extends EventEmitter {
     }
 
     // Default check for common translation file extensions
-    const validExtensions = [".json", ".yaml", ".yml", ".js", ".ts"];
+    const validExtensions = ['.json', '.yaml', '.yml', '.js', '.ts'];
     const hasValidExtension = validExtensions.includes(extension);
     this.debugLog(
       `File ${fileName} has valid extension: ${hasValidExtension} (${extension})`
@@ -379,8 +379,8 @@ export class TranslationWatcher extends EventEmitter {
     const pathParts = filePath.split(path.sep);
     this.debugLog(`Path parts:`, pathParts);
 
-    const localesIndex = pathParts.findIndex((part) =>
-      ["locales", "i18n", "translations", "lang"].includes(part.toLowerCase())
+    const localesIndex = pathParts.findIndex(part =>
+      ['locales', 'i18n', 'translations', 'lang'].includes(part.toLowerCase())
     );
 
     if (localesIndex !== -1 && pathParts[localesIndex + 1]) {
@@ -398,7 +398,7 @@ export class TranslationWatcher extends EventEmitter {
   }
 
   private debounceFileChange(
-    type: "add" | "change" | "unlink",
+    type: 'add' | 'change' | 'unlink',
     filePath: string,
     language: string
   ): void {
@@ -426,7 +426,7 @@ export class TranslationWatcher extends EventEmitter {
   }
 
   private processFileChange(
-    type: "add" | "change" | "unlink",
+    type: 'add' | 'change' | 'unlink',
     filePath: string,
     language: string
   ): void {
@@ -441,7 +441,7 @@ export class TranslationWatcher extends EventEmitter {
 
     // Emit the file change event
     this.debugLog(`Emitting 'fileChange' event:`, event);
-    this.emit("fileChange", event);
+    this.emit('fileChange', event);
 
     // Emit specific event types for convenience
     this.debugLog(`Emitting '${type}' event:`, event);
@@ -458,23 +458,23 @@ export class TranslationWatcher extends EventEmitter {
       clearTimeout(timer);
     }
     this.debounceTimers.clear();
-    this.debugLog("All debounce timers cleared");
+    this.debugLog('All debounce timers cleared');
   }
 
   /**
    * Restart the watcher with new configuration
    */
   async restart(newConfig?: Partial<Config>): Promise<void> {
-    this.debugLog("Restarting watcher...", { newConfig });
+    this.debugLog('Restarting watcher...', { newConfig });
 
     if (newConfig) {
-      this.debugLog("Updating config with new values:", newConfig);
+      this.debugLog('Updating config with new values:', newConfig);
       this.config = { ...this.config, ...newConfig };
     }
 
     await this.stop();
     await this.start();
-    this.debugLog("Watcher restart complete");
+    this.debugLog('Watcher restart complete');
   }
 
   /**
@@ -482,13 +482,13 @@ export class TranslationWatcher extends EventEmitter {
    */
   getWatchedFiles(): string[] {
     if (!this.watcher) {
-      this.debugLog("getWatchedFiles: No watcher available");
+      this.debugLog('getWatchedFiles: No watcher available');
       return [];
     }
 
     const watched = this.watcher.getWatched();
     const files = Object.values(watched).flat() as string[];
-    this.debugLog("Currently watched files:", files);
+    this.debugLog('Currently watched files:', files);
     return files;
   }
 
@@ -497,7 +497,7 @@ export class TranslationWatcher extends EventEmitter {
    */
   setDebugMode(enabled: boolean): void {
     this.options.debug = enabled;
-    this.debugLog(`Debug mode ${enabled ? "enabled" : "disabled"}`);
+    this.debugLog(`Debug mode ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**

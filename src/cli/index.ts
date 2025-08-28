@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
-import chalk from "chalk";
-import path from "path";
-import fs from "fs/promises";
+import { Command } from 'commander';
+import chalk from 'chalk';
+import path from 'path';
+import fs from 'fs/promises';
 
 // Import core components
 import {
@@ -11,7 +11,7 @@ import {
   ConfigValidator,
   Logger,
   defaultLogger,
-} from "../index";
+} from '../index';
 
 interface CLIConfig {
   watchPath: string;
@@ -19,14 +19,14 @@ interface CLIConfig {
   targetLanguages: string[];
   filePattern: string;
   provider: {
-    type: "openai" | "anthropic" | "local";
+    type: 'openai' | 'anthropic' | 'local';
     config: Record<string, any>;
   };
   preserveFormatting: boolean;
   contextInjection: boolean;
   batchSize: number;
   retryAttempts: number;
-  logLevel: "debug" | "info" | "warn" | "error";
+  logLevel: 'debug' | 'info' | 'warn' | 'error';
 }
 
 class TranslationCLI {
@@ -45,94 +45,94 @@ class TranslationCLI {
 
   private setupCommands(): void {
     this.program
-      .name("translation-watcher")
-      .description("AI-powered translation file watcher and translator")
-      .version("0.1.0");
+      .name('translation-watcher')
+      .description('AI-powered translation file watcher and translator')
+      .version('0.1.0');
 
     // Watch command
     this.program
-      .command("watch")
-      .description("Start watching translation files for changes")
+      .command('watch')
+      .description('Start watching translation files for changes')
       .option(
-        "-c, --config <path>",
-        "Path to configuration file",
-        "./translation-config.json"
+        '-c, --config <path>',
+        'Path to configuration file',
+        './translation-config.json'
       )
-      .option("-p, --path <path>", "Directory to watch for translation files")
-      .option("-b, --base <language>", "Base language code (e.g., en)")
+      .option('-p, --path <path>', 'Directory to watch for translation files')
+      .option('-b, --base <language>', 'Base language code (e.g., en)')
       .option(
-        "-t, --targets <languages>",
-        "Target language codes (comma-separated, e.g., fr,de,es)"
+        '-t, --targets <languages>',
+        'Target language codes (comma-separated, e.g., fr,de,es)'
       )
       .option(
-        "-f, --pattern <pattern>",
+        '-f, --pattern <pattern>',
         'File pattern to watch (e.g., ".*\\.json$")'
       )
       .option(
-        "--provider <type>",
-        "LLM provider type (openai, anthropic, local)"
+        '--provider <type>',
+        'LLM provider type (openai, anthropic, local)'
       )
-      .option("--api-key <key>", "API key for the provider")
-      .option("--model <model>", "Model to use for translation")
+      .option('--api-key <key>', 'API key for the provider')
+      .option('--model <model>', 'Model to use for translation')
       .option(
-        "--log-level <level>",
-        "Log level (debug, info, warn, error)",
-        "info"
+        '--log-level <level>',
+        'Log level (debug, info, warn, error)',
+        'info'
       )
-      .action(async (options) => {
+      .action(async options => {
         await this.watchCommand(options);
       });
 
     // Validate command
     this.program
-      .command("validate")
-      .description("Validate configuration file")
-      .requiredOption("-c, --config <path>", "Path to configuration file")
-      .action(async (options) => {
+      .command('validate')
+      .description('Validate configuration file')
+      .requiredOption('-c, --config <path>', 'Path to configuration file')
+      .action(async options => {
         await this.validateCommand(options);
       });
 
     // Init command
     this.program
-      .command("init")
-      .description("Initialize a new translation project")
-      .option("-p, --path <path>", "Project directory", "./translation-project")
-      .option("--base <language>", "Base language code", "en")
+      .command('init')
+      .description('Initialize a new translation project')
+      .option('-p, --path <path>', 'Project directory', './translation-project')
+      .option('--base <language>', 'Base language code', 'en')
       .option(
-        "--targets <languages>",
-        "Target language codes (comma-separated)",
-        "fr,de,es"
+        '--targets <languages>',
+        'Target language codes (comma-separated)',
+        'fr,de,es'
       )
-      .option("--provider <type>", "LLM provider type", "openai")
-      .action(async (options) => {
+      .option('--provider <type>', 'LLM provider type', 'openai')
+      .action(async options => {
         await this.initCommand(options);
       });
 
     // Status command
     this.program
-      .command("status")
-      .description("Show current translation status")
+      .command('status')
+      .description('Show current translation status')
       .action(async () => {
         await this.statusCommand();
       });
 
     // Stop command
     this.program
-      .command("stop")
-      .description("Stop the translation watcher")
+      .command('stop')
+      .description('Stop the translation watcher')
       .action(async () => {
         await this.stopCommand();
       });
 
     // Translate command
     this.program
-      .command("translate")
-      .description("Manually translate a specific file")
-      .argument("<file>", "Path to the file to translate")
+      .command('translate')
+      .description('Manually translate a specific file')
+      .argument('<file>', 'Path to the file to translate')
       .option(
-        "-c, --config <path>",
-        "Path to configuration file",
-        "./translation-config.json"
+        '-c, --config <path>',
+        'Path to configuration file',
+        './translation-config.json'
       )
       .action(async (file, options) => {
         await this.translateCommand(file, options);
@@ -142,7 +142,7 @@ class TranslationCLI {
   private async watchCommand(options: any): Promise<void> {
     try {
       this.logger.setLevel(options.logLevel);
-      this.logger.info("Starting translation watcher...");
+      this.logger.info('Starting translation watcher...');
 
       // Load or create configuration
       this.config = await this.loadOrCreateConfig(options);
@@ -151,9 +151,9 @@ class TranslationCLI {
       const validation = this.configValidator.validateConfig(this.config);
       if (!validation.isValid) {
         this.logger.error(
-          "Configuration validation failed, path: " +
+          'Configuration validation failed, path: ' +
             options.config +
-            " working directory: " +
+            ' working directory: ' +
             process.cwd()
         );
         console.log(this.configValidator.generateValidationReport(validation));
@@ -161,36 +161,36 @@ class TranslationCLI {
       }
 
       if (validation.warnings.length > 0) {
-        this.logger.warn("Configuration warnings detected");
-        validation.warnings.forEach((warning) => this.logger.warn(warning));
+        this.logger.warn('Configuration warnings detected');
+        validation.warnings.forEach(warning => this.logger.warn(warning));
       }
 
       // Initialize and start translation manager
       await this.initializeAutoTranslator();
 
-      this.logger.info("Translation watcher started successfully");
+      this.logger.info('Translation watcher started successfully');
       this.logger.info(`Watching: ${this.config.watchPath}`);
       this.logger.info(`Base language: ${this.config.baseLanguage}`);
       this.logger.info(
-        `Target languages: ${this.config.targetLanguages.join(", ")}`
+        `Target languages: ${this.config.targetLanguages.join(', ')}`
       );
       this.logger.info(`Provider: ${this.config.provider.type}`);
 
       // Keep the process running
-      process.on("SIGINT", async () => {
-        this.logger.info("Received SIGINT, shutting down...");
+      process.on('SIGINT', async () => {
+        this.logger.info('Received SIGINT, shutting down...');
         await this.cleanup();
         process.exit(0);
       });
 
-      process.on("SIGTERM", async () => {
-        this.logger.info("Received SIGTERM, shutting down...");
+      process.on('SIGTERM', async () => {
+        this.logger.info('Received SIGTERM, shutting down...');
         await this.cleanup();
         process.exit(0);
       });
     } catch (error) {
       this.logger.error(
-        "Failed to start translation watcher",
+        'Failed to start translation watcher',
         error instanceof Error ? error : new Error(String(error))
       );
       process.exit(1);
@@ -202,22 +202,22 @@ class TranslationCLI {
       const configPath = path.resolve(options.config);
       this.logger.info(`Validating configuration: ${configPath}`);
 
-      const configContent = await fs.readFile(configPath, "utf-8");
+      const configContent = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(configContent);
 
       const validation = this.configValidator.validateConfig(config);
       console.log(this.configValidator.generateValidationReport(validation));
 
       if (validation.isValid) {
-        this.logger.info("✅ Configuration is valid!");
+        this.logger.info('✅ Configuration is valid!');
         process.exit(0);
       } else {
-        this.logger.error("❌ Configuration has errors");
+        this.logger.error('❌ Configuration has errors');
         process.exit(1);
       }
     } catch (error) {
       this.logger.error(
-        "Failed to validate configuration",
+        'Failed to validate configuration',
         error instanceof Error ? error : new Error(String(error))
       );
       process.exit(1);
@@ -234,44 +234,44 @@ class TranslationCLI {
 
       // Create configuration file
       const config: CLIConfig = {
-        watchPath: "./locales",
+        watchPath: './locales',
         baseLanguage: options.base,
         targetLanguages: options.targets
-          .split(",")
+          .split(',')
           .map((lang: string) => lang.trim()),
-        filePattern: ".*\\.json$",
+        filePattern: '.*\\.json$',
         provider: {
-          type: options.provider as "openai" | "anthropic" | "local",
+          type: options.provider as 'openai' | 'anthropic' | 'local',
           config: {
-            apiKey: "YOUR_API_KEY_HERE",
+            apiKey: 'YOUR_API_KEY_HERE',
             model:
-              options.provider === "openai"
-                ? "gpt-3.5-turbo"
-                : options.provider === "anthropic"
-                ? "claude-3-sonnet-20240229"
-                : "llama2:7b",
+              options.provider === 'openai'
+                ? 'gpt-3.5-turbo'
+                : options.provider === 'anthropic'
+                  ? 'claude-3-sonnet-20240229'
+                  : 'llama2:7b',
           },
         },
         preserveFormatting: true,
         contextInjection: true,
         batchSize: 10,
         retryAttempts: 3,
-        logLevel: "info",
+        logLevel: 'info',
       };
 
-      const configPath = path.join(projectPath, "translation-config.json");
+      const configPath = path.join(projectPath, 'translation-config.json');
       await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
       // Create locales directory structure
-      const localesPath = path.join(projectPath, "locales");
+      const localesPath = path.join(projectPath, 'locales');
       await fs.mkdir(localesPath, { recursive: true });
 
       // Create base language file
       const baseLangPath = path.join(localesPath, `${options.base}.json`);
       const baseLangContent = {
-        welcome: "Welcome",
-        hello: "Hello",
-        goodbye: "Goodbye",
+        welcome: 'Welcome',
+        hello: 'Hello',
+        goodbye: 'Goodbye',
       };
       await fs.writeFile(
         baseLangPath,
@@ -282,9 +282,9 @@ class TranslationCLI {
       for (const lang of config.targetLanguages) {
         const targetLangPath = path.join(localesPath, `${lang}.json`);
         const targetLangContent = {
-          welcome: "",
-          hello: "",
-          goodbye: "",
+          welcome: '',
+          hello: '',
+          goodbye: '',
         };
         await fs.writeFile(
           targetLangPath,
@@ -293,7 +293,7 @@ class TranslationCLI {
       }
 
       // Create README
-      const readmePath = path.join(projectPath, "README.md");
+      const readmePath = path.join(projectPath, 'README.md');
       const readmeContent = `# Translation Project
 
 This project uses translation-watcher-ai to automatically translate files.
@@ -309,7 +309,7 @@ This project uses translation-watcher-ai to automatically translate files.
 \`\`\`
 locales/
 ├── ${options.base}.json     # Base language
-├── ${config.targetLanguages.join(".json     # Target languages\n├── ")}.json
+├── ${config.targetLanguages.join('.json     # Target languages\n├── ')}.json
 \`\`\`
 
 ## Commands
@@ -320,22 +320,22 @@ locales/
 
       await fs.writeFile(readmePath, readmeContent);
 
-      this.logger.info("✅ Translation project initialized successfully!");
+      this.logger.info('✅ Translation project initialized successfully!');
       this.logger.info(`Project created at: ${projectPath}`);
       this.logger.info(`Configuration file: ${configPath}`);
       this.logger.info(`Base language: ${options.base}`);
       this.logger.info(
-        `Target languages: ${config.targetLanguages.join(", ")}`
+        `Target languages: ${config.targetLanguages.join(', ')}`
       );
       this.logger.info(`Provider: ${options.provider}`);
-      this.logger.info("");
-      this.logger.info("Next steps:");
+      this.logger.info('');
+      this.logger.info('Next steps:');
       this.logger.info(`1. cd ${projectPath}`);
-      this.logger.info("2. Edit translation-config.json with your API key");
-      this.logger.info("3. Run: translation-watcher watch");
+      this.logger.info('2. Edit translation-config.json with your API key');
+      this.logger.info('3. Run: translation-watcher watch');
     } catch (error) {
       this.logger.error(
-        "Failed to initialize project",
+        'Failed to initialize project',
         error instanceof Error ? error : new Error(String(error))
       );
       process.exit(1);
@@ -344,28 +344,28 @@ locales/
 
   private async statusCommand(): Promise<void> {
     if (!this.autoTranslator) {
-      this.logger.info("No translation manager is currently running");
+      this.logger.info('No translation manager is currently running');
       return;
     }
 
     const status = this.autoTranslator.getStatus();
 
-    console.log(chalk.blue("Translation Manager Status"));
-    console.log(chalk.blue("========================="));
+    console.log(chalk.blue('Translation Manager Status'));
+    console.log(chalk.blue('========================='));
     console.log(
       `Status: ${
-        status.isRunning ? chalk.green("Running") : chalk.red("Stopped")
+        status.isRunning ? chalk.green('Running') : chalk.red('Stopped')
       }`
     );
     console.log(`Watch Path: ${status.config.watchPath}`);
     console.log(`Base Language: ${status.config.baseLanguage}`);
     console.log(
-      `Target Languages: ${status.config.targetLanguages.join(", ")}`
+      `Target Languages: ${status.config.targetLanguages.join(', ')}`
     );
     console.log(`Provider: ${status.config.provider}`);
     console.log(
       `Translating: ${
-        status.isProcessing ? chalk.yellow("Yes") : chalk.green("No")
+        status.isProcessing ? chalk.yellow('Yes') : chalk.green('No')
       }`
     );
 
@@ -385,13 +385,13 @@ locales/
 
   private async stopCommand(): Promise<void> {
     if (!this.autoTranslator) {
-      this.logger.info("No translation manager is currently running");
+      this.logger.info('No translation manager is currently running');
       return;
     }
 
-    this.logger.info("Stopping translation manager...");
+    this.logger.info('Stopping translation manager...');
     await this.cleanup();
-    this.logger.info("Translation manager stopped");
+    this.logger.info('Translation manager stopped');
     process.exit(0);
   }
 
@@ -405,7 +405,7 @@ locales/
       // Validate configuration
       const validation = this.configValidator.validateConfig(this.config);
       if (!validation.isValid) {
-        this.logger.error("Configuration validation failed");
+        this.logger.error('Configuration validation failed');
         console.log(this.configValidator.generateValidationReport(validation));
         process.exit(1);
       }
@@ -417,12 +417,12 @@ locales/
       const result = await this.autoTranslator!.translateFile(file);
 
       if (result.success) {
-        this.logger.info("✅ Translation completed successfully!");
+        this.logger.info('✅ Translation completed successfully!');
         this.logger.info(`Batches processed: ${result.batchesProcessed}`);
         this.logger.info(`Total translations: ${result.totalTranslations}`);
-        this.logger.info(`Files updated: ${result.updatedFiles.join(", ")}`);
+        this.logger.info(`Files updated: ${result.updatedFiles.join(', ')}`);
       } else {
-        this.logger.error("❌ Translation failed");
+        this.logger.error('❌ Translation failed');
         result.errors.forEach((error: string) =>
           this.logger.error(`- ${error}`)
         );
@@ -433,7 +433,7 @@ locales/
       await this.cleanup();
     } catch (error) {
       this.logger.error(
-        "Translation command failed",
+        'Translation command failed',
         error instanceof Error ? error : new Error(String(error))
       );
       process.exit(1);
@@ -445,34 +445,34 @@ locales/
       // Try to load from config file
       if (options.config) {
         const configPath = path.resolve(options.config);
-        const configContent = await fs.readFile(configPath, "utf-8");
+        const configContent = await fs.readFile(configPath, 'utf-8');
         return JSON.parse(configContent);
       }
     } catch {
       // Config file not found or invalid, create from CLI options
       this.logger.info(
-        "Config file not found, creating from CLI options, path: " +
+        'Config file not found, creating from CLI options, path: ' +
           options.config +
-          " working directory: " +
+          ' working directory: ' +
           process.cwd()
       );
     }
 
     // Create config from CLI options
     const config: CLIConfig = {
-      watchPath: options.path || "./locales",
-      baseLanguage: options.base || "en",
+      watchPath: options.path || './locales',
+      baseLanguage: options.base || 'en',
       targetLanguages: options.targets
-        ? options.targets.split(",").map((lang: string) => lang.trim())
-        : ["fr", "de"],
-      filePattern: options.pattern || ".*\\.json$",
+        ? options.targets.split(',').map((lang: string) => lang.trim())
+        : ['fr', 'de'],
+      filePattern: options.pattern || '.*\\.json$',
       provider: {
-        type: options.provider || "openai",
+        type: options.provider || 'openai',
         config: {
           apiKey:
             options.apiKey ||
             process.env[
-              `${(options.provider || "openai").toUpperCase()}_API_KEY`
+              `${(options.provider || 'openai').toUpperCase()}_API_KEY`
             ],
           model: options.model,
         },
@@ -481,7 +481,7 @@ locales/
       contextInjection: true,
       batchSize: 10,
       retryAttempts: 3,
-      logLevel: options.logLevel || "info",
+      logLevel: options.logLevel || 'info',
     };
 
     return config;
@@ -489,7 +489,7 @@ locales/
 
   private async initializeAutoTranslator(): Promise<void> {
     if (!this.config) {
-      throw new Error("Configuration not loaded");
+      throw new Error('Configuration not loaded');
     }
 
     // Create translation manager
@@ -499,30 +499,30 @@ locales/
     });
 
     // Set up event listeners
-    this.autoTranslator.on("started", () => {
-      this.logger.info("Translation manager started");
+    this.autoTranslator.on('started', () => {
+      this.logger.info('Translation manager started');
     });
 
-    this.autoTranslator.on("stopped", () => {
-      this.logger.info("Translation manager stopped");
+    this.autoTranslator.on('stopped', () => {
+      this.logger.info('Translation manager stopped');
     });
 
-    this.autoTranslator.on("baseLanguageChanged", (event: any) => {
+    this.autoTranslator.on('baseLanguageChanged', (event: any) => {
       this.logger.info(`Base language file changed: ${event.filePath}`);
     });
 
-    this.autoTranslator.on("translationCompleted", (data: any) => {
+    this.autoTranslator.on('translationCompleted', (data: any) => {
       this.logger.info(`Translation completed: ${data.response.key}`);
     });
 
-    this.autoTranslator.on("translationFailed", (data: any) => {
+    this.autoTranslator.on('translationFailed', (data: any) => {
       this.logger.error(
         `Translation failed: ${data.response.key} - ${data.response.error}`
       );
     });
 
-    this.autoTranslator.on("error", (error: any) => {
-      this.logger.error("Translation manager error:", error);
+    this.autoTranslator.on('error', (error: any) => {
+      this.logger.error('Translation manager error:', error);
     });
 
     // Start the manager

@@ -1,4 +1,4 @@
-import { TranslationData } from "./parser";
+import { TranslationData } from './parser';
 
 export interface TranslationDiff {
   added: string[];
@@ -27,7 +27,7 @@ export interface DiffResult {
     [key: string]: {
       oldValue?: string;
       newValue?: string;
-      changeType: "added" | "modified" | "removed" | "unchanged";
+      changeType: 'added' | 'modified' | 'removed' | 'unchanged';
     };
   };
 }
@@ -56,7 +56,7 @@ export class TranslationDiffDetector {
     const modified: string[] = [];
     const removed: string[] = [];
     const unchanged: string[] = [];
-    const details: DiffResult["details"] = {};
+    const details: DiffResult['details'] = {};
 
     // Find added and modified keys
     for (const key of newKeys) {
@@ -66,22 +66,22 @@ export class TranslationDiffDetector {
       if (oldValue === undefined) {
         added.push(key);
         details[key] = {
-          newValue: newValue || "",
-          changeType: "added",
+          newValue: newValue || '',
+          changeType: 'added',
         };
-      } else if (this.valuesAreDifferent(oldValue, newValue || "")) {
+      } else if (this.valuesAreDifferent(oldValue, newValue || '')) {
         modified.push(key);
         details[key] = {
           oldValue,
-          newValue: newValue || "",
-          changeType: "modified",
+          newValue: newValue || '',
+          changeType: 'modified',
         };
       } else {
         unchanged.push(key);
         details[key] = {
           oldValue,
-          newValue: newValue || "",
-          changeType: "unchanged",
+          newValue: newValue || '',
+          changeType: 'unchanged',
         };
       }
     }
@@ -92,8 +92,8 @@ export class TranslationDiffDetector {
         removed.push(key);
         const oldValue = this.getNestedValue(oldData, key);
         details[key] = {
-          oldValue: oldValue || "",
-          changeType: "removed",
+          oldValue: oldValue || '',
+          changeType: 'removed',
         };
       }
     }
@@ -125,7 +125,7 @@ export class TranslationDiffDetector {
     const oldKeys = this.extractAllKeys(oldData);
     const newKeys = this.extractAllKeys(newData);
 
-    return newKeys.filter((key) => !oldKeys.includes(key));
+    return newKeys.filter(key => !oldKeys.includes(key));
   }
 
   /**
@@ -138,28 +138,28 @@ export class TranslationDiffDetector {
     const oldKeys = this.extractAllKeys(oldData);
     const newKeys = this.extractAllKeys(newData);
 
-    return newKeys.filter((key) => {
+    return newKeys.filter(key => {
       if (!oldKeys.includes(key)) return false;
 
       const oldValue = this.getNestedValue(oldData, key);
       const newValue = this.getNestedValue(newData, key);
 
-      return this.valuesAreDifferent(oldValue || "", newValue || "");
+      return this.valuesAreDifferent(oldValue || '', newValue || '');
     });
   }
 
   /**
    * Extract all keys from translation data using dot notation
    */
-  private extractAllKeys(data: TranslationData, prefix = ""): string[] {
+  private extractAllKeys(data: TranslationData, prefix = ''): string[] {
     const keys: string[] = [];
 
     for (const [key, value] of Object.entries(data)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
 
-      if (typeof value === "string") {
+      if (typeof value === 'string') {
         keys.push(fullKey);
-      } else if (typeof value === "object" && value !== null) {
+      } else if (typeof value === 'object' && value !== null) {
         keys.push(...this.extractAllKeys(value, fullKey));
       }
     }
@@ -174,18 +174,18 @@ export class TranslationDiffDetector {
     data: TranslationData,
     key: string
   ): string | undefined {
-    const keys = key.split(".");
+    const keys = key.split('.');
     let current: any = data;
 
     for (const k of keys) {
-      if (current && typeof current === "object" && k in current) {
+      if (current && typeof current === 'object' && k in current) {
         current = current[k];
       } else {
         return undefined;
       }
     }
 
-    return typeof current === "string" ? current : undefined;
+    return typeof current === 'string' ? current : undefined;
   }
 
   /**
@@ -228,7 +228,7 @@ export class TranslationDiffDetector {
 
     if (diff.added.length > 0) {
       report += `Added Keys:\n`;
-      diff.added.forEach((key) => {
+      diff.added.forEach(key => {
         report += `+ ${key}\n`;
       });
       report += `\n`;
@@ -236,7 +236,7 @@ export class TranslationDiffDetector {
 
     if (diff.modified.length > 0) {
       report += `Modified Keys:\n`;
-      diff.modified.forEach((key) => {
+      diff.modified.forEach(key => {
         const detail = diffResult.details[key];
         report += `~ ${key}\n`;
         if (detail && detail.oldValue && detail.newValue) {
@@ -249,7 +249,7 @@ export class TranslationDiffDetector {
 
     if (diff.removed.length > 0) {
       report += `Removed Keys:\n`;
-      diff.removed.forEach((key) => {
+      diff.removed.forEach(key => {
         report += `- ${key}\n`;
       });
       report += `\n`;
@@ -292,7 +292,7 @@ export class TranslationDiffDetector {
       const targetValue = this.getNestedValue(targetData, key);
 
       // Key is missing or is an empty/whitespace-only string
-      if (targetValue === undefined || targetValue.trim() === "") {
+      if (targetValue === undefined || targetValue.trim() === '') {
         keysNeedingTranslation.push(key);
       }
     }
@@ -318,7 +318,7 @@ export class TranslationDiffDetector {
         const currentValue = this.getNestedValue(currentBaseData, key);
         const previousValue = this.getNestedValue(previousBaseData, key);
 
-        if (this.valuesAreDifferent(currentValue || "", previousValue || "")) {
+        if (this.valuesAreDifferent(currentValue || '', previousValue || '')) {
           changedKeys.push(key);
         }
       }
@@ -341,10 +341,9 @@ export class TranslationDiffDetector {
     diffResult: DiffResult,
     pattern: RegExp | string
   ): DiffResult {
-    const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
+    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
 
-    const filterKeys = (keys: string[]) =>
-      keys.filter((key) => regex.test(key));
+    const filterKeys = (keys: string[]) => keys.filter(key => regex.test(key));
 
     const filteredDiff: TranslationDiff = {
       added: filterKeys(diffResult.diff.added),
@@ -366,7 +365,7 @@ export class TranslationDiffDetector {
     };
 
     // Filter details
-    const details: DiffResult["details"] = {};
+    const details: DiffResult['details'] = {};
     for (const key of Object.keys(diffResult.details)) {
       if (regex.test(key)) {
         const detail = diffResult.details[key];

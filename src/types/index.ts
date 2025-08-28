@@ -7,7 +7,7 @@ export interface Config {
 
   // LLM Configuration
   provider: {
-    type: "openai" | "anthropic" | "local" | "custom";
+    type: 'openai' | 'anthropic' | 'local' | 'custom';
     config: Record<string, any>;
   };
 
@@ -18,5 +18,5 @@ export interface Config {
   retryAttempts: number;
 
   // Output settings
-  logLevel: "debug" | "info" | "warn" | "error";
+  logLevel: 'debug' | 'info' | 'warn' | 'error';
 }

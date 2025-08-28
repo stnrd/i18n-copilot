@@ -1,9 +1,9 @@
-import { EventEmitter } from "events";
-import path from "path";
-import fs from "fs/promises";
-import { TranslationData, TranslationParser } from "./parser";
-import { TranslationDiffDetector, DiffResult } from "./diff-detector";
-import { Config } from "../types";
+import { EventEmitter } from 'events';
+import path from 'path';
+import fs from 'fs/promises';
+import { TranslationData, TranslationParser } from './parser';
+import { TranslationDiffDetector, DiffResult } from './diff-detector';
+import { Config } from '../types';
 
 export interface TranslationRequest {
   key: string;
@@ -94,7 +94,7 @@ export class TranslationOrchestrator extends EventEmitter {
       throw new Error(`Invalid configuration for provider: ${provider.name}`);
     }
     this.provider = provider;
-    this.emit("providerChanged", { provider: provider.name });
+    this.emit('providerChanged', { provider: provider.name });
   }
 
   /**
@@ -112,11 +112,11 @@ export class TranslationOrchestrator extends EventEmitter {
     targetLanguageFiles: string[]
   ): Promise<TranslationBatch[]> {
     if (!this.provider) {
-      throw new Error("No translation provider configured");
+      throw new Error('No translation provider configured');
     }
 
     if (this.isProcessing) {
-      throw new Error("Translation already in progress");
+      throw new Error('Translation already in progress');
     }
 
     this.isProcessing = true;
@@ -148,7 +148,7 @@ export class TranslationOrchestrator extends EventEmitter {
             batches.push(batch);
           }
         } catch (error) {
-          this.emit("error", {
+          this.emit('error', {
             file: targetFile,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -196,8 +196,8 @@ export class TranslationOrchestrator extends EventEmitter {
     }
 
     // Create translation requests
-    const requests: TranslationRequest[] = keysNeedingTranslation.map((key) => {
-      const text = this.parser.getNestedValue(baseData, key) || "";
+    const requests: TranslationRequest[] = keysNeedingTranslation.map(key => {
+      const text = this.parser.getNestedValue(baseData, key) || '';
       const context = this.options.contextInjection
         ? this.extractContext(baseData, key)
         : undefined;
@@ -242,7 +242,7 @@ export class TranslationOrchestrator extends EventEmitter {
     };
 
     this.currentBatch = batch;
-    this.emit("batchStarted", { batch });
+    this.emit('batchStarted', { batch });
 
     for (const request of requests) {
       try {
@@ -255,28 +255,28 @@ export class TranslationOrchestrator extends EventEmitter {
           batch.errorCount++;
         }
 
-        this.emit("translationCompleted", { request, response });
+        this.emit('translationCompleted', { request, response });
       } catch (error) {
         const response: TranslationResponse = {
           key: request.key,
           originalText: request.text,
-          translatedText: "",
+          translatedText: '',
           sourceLanguage: request.sourceLanguage,
           targetLanguage: request.targetLanguage,
           success: false,
           error: error instanceof Error ? error.message : String(error),
-          provider: this.provider?.name || "unknown",
+          provider: this.provider?.name || 'unknown',
           timestamp: new Date(),
         };
 
         batch.responses.push(response);
         batch.errorCount++;
-        this.emit("translationFailed", { request, response, error });
+        this.emit('translationFailed', { request, response, error });
       }
     }
 
     batch.endTime = new Date();
-    this.emit("batchCompleted", { batch });
+    this.emit('batchCompleted', { batch });
     this.currentBatch = null;
 
     return batch;
@@ -317,15 +317,15 @@ export class TranslationOrchestrator extends EventEmitter {
       }
     }
 
-    throw lastError || new Error("Translation failed after all retry attempts");
+    throw lastError || new Error('Translation failed after all retry attempts');
   }
 
   /**
    * Extract context for a translation key
    */
   private extractContext(data: TranslationData, key: string): string {
-    const keys = key.split(".");
-    const parentKey = keys.slice(0, -1).join(".");
+    const keys = key.split('.');
+    const parentKey = keys.slice(0, -1).join('.');
 
     if (parentKey) {
       const parentValue = this.parser.getNestedValue(data, parentKey);
@@ -340,10 +340,10 @@ export class TranslationOrchestrator extends EventEmitter {
     const currentLevel =
       parent.length > 0 ? this.getNestedObject(data, parent) : data;
 
-    if (currentLevel && typeof currentLevel === "object") {
+    if (currentLevel && typeof currentLevel === 'object') {
       for (const [siblingKey, siblingValue] of Object.entries(currentLevel)) {
         if (
-          typeof siblingValue === "string" &&
+          typeof siblingValue === 'string' &&
           siblingKey !== keys[keys.length - 1]
         ) {
           siblings.push(`${siblingKey}: ${siblingValue}`);
@@ -352,10 +352,10 @@ export class TranslationOrchestrator extends EventEmitter {
     }
 
     if (siblings.length > 0) {
-      return `Related: ${siblings.slice(0, 3).join(", ")}`;
+      return `Related: ${siblings.slice(0, 3).join(', ')}`;
     }
 
-    return "";
+    return '';
   }
 
   /**
@@ -365,7 +365,7 @@ export class TranslationOrchestrator extends EventEmitter {
     let current: any = data;
 
     for (const key of path) {
-      if (current && typeof current === "object" && key in current) {
+      if (current && typeof current === 'object' && key in current) {
         current = current[key];
       } else {
         return null;
@@ -380,10 +380,10 @@ export class TranslationOrchestrator extends EventEmitter {
    */
   private detectTargetLanguage(filePath: string): string {
     // Extract filename from path (e.g., "/path/to/de.json" -> "de.json")
-    const fileName = filePath.split("/").pop() || "";
+    const fileName = filePath.split('/').pop() || '';
 
     // Remove extension to get language code (e.g., "de.json" -> "de")
-    const languageCode = fileName.replace(".json", "");
+    const languageCode = fileName.replace('.json', '');
 
     // Validate that the detected language is in the configured target languages
     if (this.config.targetLanguages.includes(languageCode)) {
@@ -394,7 +394,7 @@ export class TranslationOrchestrator extends EventEmitter {
     console.warn(
       `Could not detect target language from file path: ${filePath}. Using fallback: ${this.config.targetLanguages[0]}`
     );
-    return this.config.targetLanguages[0] || "en";
+    return this.config.targetLanguages[0] || 'en';
   }
 
   /**
@@ -417,7 +417,7 @@ export class TranslationOrchestrator extends EventEmitter {
   stop(): void {
     this.isProcessing = false;
     this.currentBatch = null;
-    this.emit("stopped");
+    this.emit('stopped');
   }
 
   /**
@@ -433,7 +433,7 @@ export class TranslationOrchestrator extends EventEmitter {
 
       if (!backupExists) {
         // No backup exists, treat all keys as "new" for first run
-        return this.diffDetector["extractAllKeys"](currentBaseData);
+        return this.diffDetector['extractAllKeys'](currentBaseData);
       }
 
       const backupContent = await this.readFile(backupFile);
@@ -446,10 +446,10 @@ export class TranslationOrchestrator extends EventEmitter {
     } catch (error) {
       // If backup is corrupted or missing, treat all keys as new
       console.warn(
-        "Could not read backup file, treating all keys as new:",
+        'Could not read backup file, treating all keys as new:',
         error
       );
-      return this.diffDetector["extractAllKeys"](currentBaseData);
+      return this.diffDetector['extractAllKeys'](currentBaseData);
     }
   }
 
@@ -470,7 +470,7 @@ export class TranslationOrchestrator extends EventEmitter {
       // Write backup file
       await this.writeFile(backupFile, JSON.stringify(baseData, null, 2));
     } catch (error) {
-      console.warn("Could not create backup file:", error);
+      console.warn('Could not create backup file:', error);
       // Don't throw - backup failure shouldn't stop translation
     }
   }
@@ -484,7 +484,7 @@ export class TranslationOrchestrator extends EventEmitter {
       path.extname(baseLanguageFile)
     );
     const dir = path.dirname(baseLanguageFile);
-    return path.join(dir, ".backups", `${fileName}.backup.json`);
+    return path.join(dir, '.backups', `${fileName}.backup.json`);
   }
 
   /**
@@ -503,14 +503,14 @@ export class TranslationOrchestrator extends EventEmitter {
    * Read a file
    */
   private async readFile(filePath: string): Promise<string> {
-    return fs.readFile(filePath, "utf-8");
+    return fs.readFile(filePath, 'utf-8');
   }
 
   /**
    * Write a file
    */
   private async writeFile(filePath: string, content: string): Promise<void> {
-    return fs.writeFile(filePath, content, "utf-8");
+    return fs.writeFile(filePath, content, 'utf-8');
   }
 
   /**
@@ -520,7 +520,7 @@ export class TranslationOrchestrator extends EventEmitter {
     try {
       await fs.mkdir(dirPath, { recursive: true });
     } catch (error) {
-      if ((error as any).code !== "EEXIST") {
+      if ((error as any).code !== 'EEXIST') {
         throw error;
       }
     }
@@ -530,7 +530,7 @@ export class TranslationOrchestrator extends EventEmitter {
    * Utility delay function
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

@@ -78,8 +78,8 @@ export abstract class BaseTranslationProvider implements TranslationProvider {
    * Clean and validate input text
    */
   protected sanitizeInput(text: string): string {
-    if (!text || typeof text !== "string") {
-      throw new Error("Input text must be a non-empty string");
+    if (!text || typeof text !== 'string') {
+      throw new Error('Input text must be a non-empty string');
     }
 
     return text.trim();

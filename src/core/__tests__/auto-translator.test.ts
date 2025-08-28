@@ -1,14 +1,14 @@
-import { AutoTranslator } from "../auto-translator";
-import { Config } from "../../types";
-import fs from "fs/promises";
-import { EventEmitter } from "events";
+import { AutoTranslator } from '../auto-translator';
+import { Config } from '../../types';
+import fs from 'fs/promises';
+import { EventEmitter } from 'events';
 
 // Mock fs module
-jest.mock("fs/promises");
+jest.mock('fs/promises');
 const mockedFs = fs as jest.Mocked<typeof fs>;
 
 // Mock TranslationOrchestrator
-jest.mock("../translator");
+jest.mock('../translator');
 const mockOrchestrator = {
   setProvider: jest.fn(),
   processFileChanges: jest.fn(),
@@ -17,7 +17,7 @@ const mockOrchestrator = {
 };
 
 // Mock TranslationWatcher
-jest.mock("../watcher");
+jest.mock('../watcher');
 const mockWatcher = {
   start: jest.fn(),
   stop: jest.fn(),
@@ -36,15 +36,15 @@ const mockWatcher = {
 };
 
 // Mock the imports
-jest.mock("../translator", () => ({
+jest.mock('../translator', () => ({
   TranslationOrchestrator: jest.fn().mockImplementation(() => mockOrchestrator),
 }));
 
-jest.mock("../watcher", () => ({
+jest.mock('../watcher', () => ({
   TranslationWatcher: jest.fn().mockImplementation(() => mockWatcher),
 }));
 
-describe("AutoTranslator", () => {
+describe('AutoTranslator', () => {
   let autoTranslator: AutoTranslator;
   let mockConfig: Config;
   let mockLogger: any;
@@ -53,15 +53,15 @@ describe("AutoTranslator", () => {
     jest.clearAllMocks();
 
     mockConfig = {
-      watchPath: "./locales",
-      baseLanguage: "en",
-      targetLanguages: ["fr", "de"],
-      filePattern: ".*\\.json$",
+      watchPath: './locales',
+      baseLanguage: 'en',
+      targetLanguages: ['fr', 'de'],
+      filePattern: '.*\\.json$',
       provider: {
-        type: "openai" as const,
+        type: 'openai' as const,
         config: {
-          apiKey: "test-key",
-          model: "gpt-3.5-turbo",
+          apiKey: 'test-key',
+          model: 'gpt-3.5-turbo',
         },
       },
       preserveFormatting: true,
@@ -69,7 +69,7 @@ describe("AutoTranslator", () => {
       batchSize: 10,
       retryAttempts: 3,
 
-      logLevel: "info" as const,
+      logLevel: 'info' as const,
     };
 
     mockLogger = {
@@ -84,155 +84,155 @@ describe("AutoTranslator", () => {
     mockOrchestrator.getStats.mockReturnValue({
       isProcessing: false,
       currentBatch: null,
-      provider: "mock",
+      provider: 'mock',
     });
     mockWatcher.start.mockResolvedValue(undefined);
     mockWatcher.stop.mockResolvedValue(undefined);
     mockWatcher.getStats.mockReturnValue({
       isWatching: true,
-      watchPath: "./locales",
-      targetLanguages: ["fr", "de"],
+      watchPath: './locales',
+      targetLanguages: ['fr', 'de'],
     });
     mockWatcher.listeners.clear();
     mockWatcher.emit.mockClear();
   });
 
-  describe("constructor", () => {
-    it("should create instance with default options", () => {
+  describe('constructor', () => {
+    it('should create instance with default options', () => {
       autoTranslator = new AutoTranslator(mockConfig);
       expect(autoTranslator).toBeInstanceOf(EventEmitter);
       expect(autoTranslator.isActive()).toBe(false);
       expect(autoTranslator.isTranslating()).toBe(false);
     });
 
-    it("should create instance with custom logger", () => {
+    it('should create instance with custom logger', () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       expect(autoTranslator).toBeInstanceOf(EventEmitter);
     });
 
-    it("should not auto-start when autoStart is false", () => {
+    it('should not auto-start when autoStart is false', () => {
       autoTranslator = new AutoTranslator(mockConfig, { autoStart: false });
       expect(autoTranslator.isActive()).toBe(false);
     });
   });
 
-  describe("start", () => {
+  describe('start', () => {
     beforeEach(() => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
     });
 
-    it("should start successfully", async () => {
+    it('should start successfully', async () => {
       await autoTranslator.start();
 
       expect(autoTranslator.isActive()).toBe(true);
       expect(mockOrchestrator.setProvider).toHaveBeenCalled();
       expect(mockWatcher.start).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "Translation manager started successfully"
+        'Translation manager started successfully'
       );
     });
 
-    it("should throw error if already running", async () => {
+    it('should throw error if already running', async () => {
       await autoTranslator.start();
 
       await expect(autoTranslator.start()).rejects.toThrow(
-        "Translation manager is already running"
+        'Translation manager is already running'
       );
     });
 
-    it("should handle provider setup failure", async () => {
+    it('should handle provider setup failure', async () => {
       mockOrchestrator.setProvider.mockImplementation(() => {
-        throw new Error("Provider setup failed");
+        throw new Error('Provider setup failed');
       });
 
       await expect(autoTranslator.start()).rejects.toThrow(
-        "Provider setup failed"
+        'Provider setup failed'
       );
       expect(autoTranslator.isActive()).toBe(false);
     });
 
-    it("should handle watcher start failure", async () => {
-      mockWatcher.start.mockRejectedValue(new Error("Watcher start failed"));
+    it('should handle watcher start failure', async () => {
+      mockWatcher.start.mockRejectedValue(new Error('Watcher start failed'));
 
       await expect(autoTranslator.start()).rejects.toThrow(
-        "Watcher start failed"
+        'Watcher start failed'
       );
       expect(autoTranslator.isActive()).toBe(false);
     });
   });
 
-  describe("stop", () => {
+  describe('stop', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should stop successfully", async () => {
+    it('should stop successfully', async () => {
       await autoTranslator.stop();
 
       expect(autoTranslator.isActive()).toBe(false);
       expect(mockWatcher.stop).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "Translation manager stopped"
+        'Translation manager stopped'
       );
     });
 
-    it("should not throw error if not running", async () => {
+    it('should not throw error if not running', async () => {
       await autoTranslator.stop();
       await expect(autoTranslator.stop()).resolves.toBeUndefined();
     });
 
-    it("should handle stop failure", async () => {
-      mockWatcher.stop.mockRejectedValue(new Error("Stop failed"));
+    it('should handle stop failure', async () => {
+      mockWatcher.stop.mockRejectedValue(new Error('Stop failed'));
 
-      await expect(autoTranslator.stop()).rejects.toThrow("Stop failed");
+      await expect(autoTranslator.stop()).rejects.toThrow('Stop failed');
       expect(autoTranslator.isActive()).toBe(false);
     });
   });
 
-  describe("translateFile", () => {
+  describe('translateFile', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should throw error if not running", async () => {
+    it('should throw error if not running', async () => {
       await autoTranslator.stop();
 
-      await expect(autoTranslator.translateFile("test.json")).rejects.toThrow(
-        "Translation manager is not running"
+      await expect(autoTranslator.translateFile('test.json')).rejects.toThrow(
+        'Translation manager is not running'
       );
     });
 
-    it("should throw error if already processing", async () => {
+    it('should throw error if already processing', async () => {
       // Set the internal processing flag to simulate processing
       (autoTranslator as any).isProcessing = true;
 
-      await expect(autoTranslator.translateFile("en.json")).rejects.toThrow(
-        "Translation already in progress"
+      await expect(autoTranslator.translateFile('en.json')).rejects.toThrow(
+        'Translation already in progress'
       );
     });
 
-    it("should return error result if file is not base language", async () => {
-      const result = await autoTranslator.translateFile("fr.json");
+    it('should return error result if file is not base language', async () => {
+      const result = await autoTranslator.translateFile('fr.json');
 
       expect(result.success).toBe(false);
       expect(result.errors).toContain(
-        "File fr.json is not a base language file"
+        'File fr.json is not a base language file'
       );
     });
 
-    it("should return error result if no target files found", async () => {
+    it('should return error result if no target files found', async () => {
       // Mock fs.access to simulate no target files
-      mockedFs.access.mockRejectedValue(new Error("File not found"));
+      mockedFs.access.mockRejectedValue(new Error('File not found'));
 
-      const result = await autoTranslator.translateFile("en.json");
+      const result = await autoTranslator.translateFile('en.json');
 
       expect(result.success).toBe(false);
-      expect(result.errors).toContain("No target language files found");
+      expect(result.errors).toContain('No target language files found');
     });
 
-    it("should process translations successfully", async () => {
+    it('should process translations successfully', async () => {
       // Mock target files exist
       mockedFs.access.mockResolvedValue(undefined);
 
@@ -242,15 +242,15 @@ describe("AutoTranslator", () => {
           responses: [
             {
               success: true,
-              translatedText: "[FR] Hello",
-              targetLanguage: "fr",
-              key: "hello",
+              translatedText: '[FR] Hello',
+              targetLanguage: 'fr',
+              key: 'hello',
             },
             {
               success: true,
-              translatedText: "[DE] Hello",
-              targetLanguage: "de",
-              key: "hello",
+              translatedText: '[DE] Hello',
+              targetLanguage: 'de',
+              key: 'hello',
             },
           ],
         },
@@ -262,7 +262,7 @@ describe("AutoTranslator", () => {
       mockedFs.readFile.mockResolvedValue('{"hello": ""}');
       mockedFs.writeFile.mockResolvedValue(undefined);
 
-      const result = await autoTranslator.translateFile("en.json");
+      const result = await autoTranslator.translateFile('en.json');
 
       expect(result.success).toBe(true);
       expect(result.batchesProcessed).toBe(1);
@@ -270,49 +270,49 @@ describe("AutoTranslator", () => {
       expect(result.updatedFiles).toHaveLength(2);
     });
 
-    it("should handle translation processing failure", async () => {
+    it('should handle translation processing failure', async () => {
       // Mock target files exist
       mockedFs.access.mockResolvedValue(undefined);
 
       // Mock translation failure
       mockOrchestrator.processFileChanges.mockRejectedValue(
-        new Error("Translation failed")
+        new Error('Translation failed')
       );
 
-      const result = await autoTranslator.translateFile("en.json");
+      const result = await autoTranslator.translateFile('en.json');
 
       expect(result.success).toBe(false);
-      expect(result.errors).toContain("Translation failed");
+      expect(result.errors).toContain('Translation failed');
     });
   });
 
-  describe("getStatus", () => {
+  describe('getStatus', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should return correct status", () => {
+    it('should return correct status', () => {
       const status = autoTranslator.getStatus();
 
       expect(status.isRunning).toBe(true);
       expect(status.isProcessing).toBe(false);
-      expect(status.config.baseLanguage).toBe("en");
-      expect(status.config.targetLanguages).toEqual(["fr", "de"]);
-      expect(status.config.provider).toBe("openai");
+      expect(status.config.baseLanguage).toBe('en');
+      expect(status.config.targetLanguages).toEqual(['fr', 'de']);
+      expect(status.config.provider).toBe('openai');
       expect(status.watcherStats).toBeDefined();
       expect(status.orchestratorStats).toBeDefined();
     });
   });
 
-  describe("event handling", () => {
+  describe('event handling', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should emit started event", (done) => {
-      autoTranslator.on("started", () => {
+    it('should emit started event', done => {
+      autoTranslator.on('started', () => {
         done();
       });
 
@@ -320,54 +320,54 @@ describe("AutoTranslator", () => {
       autoTranslator.stop().then(() => autoTranslator.start());
     });
 
-    it("should emit stopped event", (done) => {
-      autoTranslator.on("stopped", () => {
+    it('should emit stopped event', done => {
+      autoTranslator.on('stopped', () => {
         done();
       });
 
       autoTranslator.stop();
     });
 
-    it("should emit baseLanguageChanged event", (done) => {
-      autoTranslator.on("baseLanguageChanged", (event) => {
-        expect(event.filePath).toBe("en.json");
-        expect(event.language).toBe("en");
+    it('should emit baseLanguageChanged event', done => {
+      autoTranslator.on('baseLanguageChanged', event => {
+        expect(event.filePath).toBe('en.json');
+        expect(event.language).toBe('en');
         done();
       });
 
       // Simulate file change event
       const mockEvent = {
-        type: "change",
-        filePath: "en.json",
-        language: "en",
+        type: 'change',
+        filePath: 'en.json',
+        language: 'en',
         timestamp: new Date(),
       };
-      (autoTranslator as any).watcher.emit("fileChange", mockEvent);
+      (autoTranslator as any).watcher.emit('fileChange', mockEvent);
     });
 
-    it("should emit error event", (done) => {
-      autoTranslator.on("error", (error) => {
-        expect(error.message).toBe("Test error");
+    it('should emit error event', done => {
+      autoTranslator.on('error', error => {
+        expect(error.message).toBe('Test error');
         done();
       });
 
       // Simulate error event
-      (autoTranslator as any).watcher.emit("error", new Error("Test error"));
+      (autoTranslator as any).watcher.emit('error', new Error('Test error'));
     });
   });
 
-  describe("provider setup", () => {
-    it("should set up OpenAI provider", async () => {
+  describe('provider setup', () => {
+    it('should set up OpenAI provider', async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
 
       expect(mockOrchestrator.setProvider).toHaveBeenCalled();
     });
 
-    it("should set up Anthropic provider", async () => {
+    it('should set up Anthropic provider', async () => {
       const anthropicConfig = {
         ...mockConfig,
-        provider: { type: "anthropic" as const, config: { apiKey: "test" } },
+        provider: { type: 'anthropic' as const, config: { apiKey: 'test' } },
       };
       autoTranslator = new AutoTranslator(anthropicConfig, {
         logger: mockLogger,
@@ -377,10 +377,10 @@ describe("AutoTranslator", () => {
       expect(mockOrchestrator.setProvider).toHaveBeenCalled();
     });
 
-    it("should set up Local provider", async () => {
+    it('should set up Local provider', async () => {
       const localConfig = {
         ...mockConfig,
-        provider: { type: "local" as const, config: {} },
+        provider: { type: 'local' as const, config: {} },
       };
       autoTranslator = new AutoTranslator(localConfig, { logger: mockLogger });
       await autoTranslator.start();
@@ -388,28 +388,28 @@ describe("AutoTranslator", () => {
       expect(mockOrchestrator.setProvider).toHaveBeenCalled();
     });
 
-    it("should throw error for unsupported provider", async () => {
+    it('should throw error for unsupported provider', async () => {
       const invalidConfig = {
         ...mockConfig,
-        provider: { type: "invalid" as any, config: {} },
+        provider: { type: 'invalid' as any, config: {} },
       };
       autoTranslator = new AutoTranslator(invalidConfig, {
         logger: mockLogger,
       });
 
       await expect(autoTranslator.start()).rejects.toThrow(
-        "Unsupported provider type: invalid"
+        'Unsupported provider type: invalid'
       );
     });
   });
 
-  describe("file operations", () => {
+  describe('file operations', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should handle nested key updates correctly", async () => {
+    it('should handle nested key updates correctly', async () => {
       // Mock target files exist
       mockedFs.access.mockResolvedValue(undefined);
 
@@ -418,15 +418,15 @@ describe("AutoTranslator", () => {
           responses: [
             {
               success: true,
-              translatedText: "[FR] Welcome",
-              targetLanguage: "fr",
-              key: "common.welcome",
+              translatedText: '[FR] Welcome',
+              targetLanguage: 'fr',
+              key: 'common.welcome',
             },
             {
               success: true,
-              translatedText: "[FR] Hello",
-              targetLanguage: "fr",
-              key: "common.hello",
+              translatedText: '[FR] Hello',
+              targetLanguage: 'fr',
+              key: 'common.hello',
             },
           ],
         },
@@ -440,49 +440,49 @@ describe("AutoTranslator", () => {
       );
       mockedFs.writeFile.mockResolvedValue(undefined);
 
-      await autoTranslator.translateFile("en.json");
+      await autoTranslator.translateFile('en.json');
 
       // Verify the nested structure is preserved and updated
       expect(mockedFs.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining("fr.json"),
+        expect.stringContaining('fr.json'),
         expect.stringContaining('"common"')
       );
     });
 
     it("should return error result if target files don't exist", async () => {
       // Mock target files don't exist initially
-      mockedFs.access.mockRejectedValue(new Error("File not found"));
+      mockedFs.access.mockRejectedValue(new Error('File not found'));
 
-      const result = await autoTranslator.translateFile("en.json");
+      const result = await autoTranslator.translateFile('en.json');
 
       expect(result.success).toBe(false);
-      expect(result.errors).toContain("No target language files found");
+      expect(result.errors).toContain('No target language files found');
     });
   });
 
-  describe("language detection", () => {
+  describe('language detection', () => {
     beforeEach(async () => {
       autoTranslator = new AutoTranslator(mockConfig, { logger: mockLogger });
       await autoTranslator.start();
     });
 
-    it("should detect language from filename", () => {
+    it('should detect language from filename', () => {
       const language = (autoTranslator as any).detectLanguageFromPath(
-        "en.json"
+        'en.json'
       );
-      expect(language).toBe("en");
+      expect(language).toBe('en');
     });
 
-    it("should detect language from directory structure", () => {
+    it('should detect language from directory structure', () => {
       const language = (autoTranslator as any).detectLanguageFromPath(
-        "/locales/fr/translations.json"
+        '/locales/fr/translations.json'
       );
-      expect(language).toBe("fr");
+      expect(language).toBe('fr');
     });
 
-    it("should return null for invalid paths", () => {
+    it('should return null for invalid paths', () => {
       const language = (autoTranslator as any).detectLanguageFromPath(
-        "invalid-file.txt"
+        'invalid-file.txt'
       );
       expect(language).toBeNull();
     });

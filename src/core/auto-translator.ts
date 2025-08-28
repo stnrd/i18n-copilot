@@ -1,10 +1,10 @@
-import { EventEmitter } from "events";
-import path from "path";
-import fs from "fs/promises";
-import { TranslationOrchestrator } from "./translator";
-import { TranslationWatcher } from "./watcher";
-import { Config } from "../types";
-import { defaultLogger, Logger } from "../utils/logger";
+import { EventEmitter } from 'events';
+import path from 'path';
+import fs from 'fs/promises';
+import { TranslationOrchestrator } from './translator';
+import { TranslationWatcher } from './watcher';
+import { Config } from '../types';
+import { defaultLogger, Logger } from '../utils/logger';
 
 export interface AutoTranslatorOptions {
   logger?: Logger;
@@ -47,7 +47,7 @@ export class AutoTranslator extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isActive()) {
-      throw new Error("Translation manager is already running");
+      throw new Error('Translation manager is already running');
     }
 
     try {
@@ -58,10 +58,10 @@ export class AutoTranslator extends EventEmitter {
       await this.watcher.start();
 
       this.isRunning = true;
-      this.emit("started");
-      this.logger.info("Translation manager started successfully");
+      this.emit('started');
+      this.logger.info('Translation manager started successfully');
     } catch (error) {
-      this.logger.error("Failed to start translation manager", error as Error);
+      this.logger.error('Failed to start translation manager', error as Error);
       throw error;
     }
   }
@@ -77,12 +77,12 @@ export class AutoTranslator extends EventEmitter {
     try {
       await this.watcher.stop();
       this.isRunning = false;
-      this.emit("stopped");
-      this.logger.info("Translation manager stopped");
+      this.emit('stopped');
+      this.logger.info('Translation manager stopped');
     } catch (error) {
       // Even if stopping fails, mark as not running to prevent inconsistent state
       this.isRunning = false;
-      this.logger.error("Failed to stop translation manager", error as Error);
+      this.logger.error('Failed to stop translation manager', error as Error);
       throw error;
     }
   }
@@ -106,11 +106,11 @@ export class AutoTranslator extends EventEmitter {
    */
   async translateFile(filePath: string): Promise<TranslationResult> {
     if (!this.isActive()) {
-      throw new Error("Translation manager is not running");
+      throw new Error('Translation manager is not running');
     }
 
     if (this.isProcessing) {
-      throw new Error("Translation already in progress");
+      throw new Error('Translation already in progress');
     }
 
     this.isProcessing = true;
@@ -132,7 +132,7 @@ export class AutoTranslator extends EventEmitter {
       // Get target language files
       const targetFiles = await this.getTargetLanguageFiles();
       if (targetFiles.length === 0) {
-        throw new Error("No target language files found");
+        throw new Error('No target language files found');
       }
 
       this.logger.info(
@@ -162,13 +162,13 @@ export class AutoTranslator extends EventEmitter {
         );
       } else {
         result.success = true;
-        this.logger.info("No translations needed - files are up to date");
+        this.logger.info('No translations needed - files are up to date');
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       result.errors.push(errorMessage);
-      this.logger.error("Translation failed", error as Error);
+      this.logger.error('Translation failed', error as Error);
     } finally {
       this.isProcessing = false;
     }
@@ -202,16 +202,16 @@ export class AutoTranslator extends EventEmitter {
       let provider: any;
 
       switch (this.config.provider.type) {
-        case "openai":
-          const { OpenAIProvider } = await import("../providers/openai");
+        case 'openai':
+          const { OpenAIProvider } = await import('../providers/openai');
           provider = new OpenAIProvider(this.config.provider.config as any);
           break;
-        case "anthropic":
-          const { AnthropicProvider } = await import("../providers/anthropic");
+        case 'anthropic':
+          const { AnthropicProvider } = await import('../providers/anthropic');
           provider = new AnthropicProvider(this.config.provider.config as any);
           break;
-        case "local":
-          const { LocalProvider } = await import("../providers/local");
+        case 'local':
+          const { LocalProvider } = await import('../providers/local');
           provider = new LocalProvider(this.config.provider.config as any);
           break;
         default:
@@ -225,7 +225,7 @@ export class AutoTranslator extends EventEmitter {
         `Provider ${this.config.provider.type} initialized successfully`
       );
     } catch (error) {
-      this.logger.error("Failed to initialize provider", error as Error);
+      this.logger.error('Failed to initialize provider', error as Error);
       throw error;
     }
   }
@@ -234,38 +234,38 @@ export class AutoTranslator extends EventEmitter {
    * Set up event listeners for the watcher
    */
   private setupEventListeners(): void {
-    this.watcher.on("fileChange", async (event) => {
+    this.watcher.on('fileChange', async event => {
       if (
-        event.type === "change" &&
+        event.type === 'change' &&
         event.language === this.config.baseLanguage
       ) {
         this.logger.info(`Base language file changed: ${event.filePath}`);
 
         // Emit the event for external listeners
-        this.emit("baseLanguageChanged", event);
+        this.emit('baseLanguageChanged', event);
 
         // Auto-translate if enabled
         if (this.isActive() && !this.isTranslating()) {
           try {
             await this.translateFile(event.filePath);
           } catch (error) {
-            this.logger.error("Auto-translation failed", error as Error);
+            this.logger.error('Auto-translation failed', error as Error);
           }
         }
       }
     });
 
-    this.watcher.on("error", (error) => {
-      this.emit("error", error);
-      this.logger.error("Watcher error", error);
+    this.watcher.on('error', error => {
+      this.emit('error', error);
+      this.logger.error('Watcher error', error);
     });
 
-    this.orchestrator.on("translationCompleted", (data) => {
-      this.emit("translationCompleted", data);
+    this.orchestrator.on('translationCompleted', data => {
+      this.emit('translationCompleted', data);
     });
 
-    this.orchestrator.on("translationFailed", (data) => {
-      this.emit("translationFailed", data);
+    this.orchestrator.on('translationFailed', data => {
+      this.emit('translationFailed', data);
     });
   }
 
@@ -329,7 +329,7 @@ export class AutoTranslator extends EventEmitter {
           // Read existing file to preserve structure
           let existingData = {};
           try {
-            const existingContent = await fs.readFile(targetFilePath, "utf-8");
+            const existingContent = await fs.readFile(targetFilePath, 'utf-8');
             existingData = JSON.parse(existingContent);
           } catch {
             // File doesn't exist or is invalid, start with empty object
@@ -354,9 +354,9 @@ export class AutoTranslator extends EventEmitter {
         }
       }
 
-      this.logger.info("All target language files updated successfully");
+      this.logger.info('All target language files updated successfully');
     } catch (error) {
-      this.logger.error("Failed to update target files:", error as Error);
+      this.logger.error('Failed to update target files:', error as Error);
     }
   }
 
@@ -365,13 +365,13 @@ export class AutoTranslator extends EventEmitter {
    */
   private setNestedValue(obj: any, path: string, value: string): void {
     const keys = path
-      .split(".")
-      .filter((key): key is string => key !== undefined && key !== "");
+      .split('.')
+      .filter((key): key is string => key !== undefined && key !== '');
     let current = obj;
 
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      if (!(key in current) || typeof current[key] !== "object") {
+      if (!(key in current) || typeof current[key] !== 'object') {
         current[key] = {};
       }
       current = current[key];
@@ -397,8 +397,8 @@ export class AutoTranslator extends EventEmitter {
 
     // Try to extract from directory structure (e.g., /locales/en/file.json)
     const pathParts = filePath.split(path.sep);
-    const localesIndex = pathParts.findIndex((part) =>
-      ["locales", "i18n", "translations", "lang"].includes(part.toLowerCase())
+    const localesIndex = pathParts.findIndex(part =>
+      ['locales', 'i18n', 'translations', 'lang'].includes(part.toLowerCase())
     );
 
     if (localesIndex !== -1 && pathParts[localesIndex + 1]) {

@@ -4,21 +4,21 @@ import {
   TranslationRequest,
   TranslationResponse,
   TranslationBatch,
-} from "../translator";
-import { TranslationData } from "../parser";
-import { Config } from "../../types";
+} from '../translator';
+import { TranslationData } from '../parser';
+import { Config } from '../../types';
 
 // Mock provider implementation
 class MockProvider implements TranslationProvider {
-  name = "mock";
+  name = 'mock';
 
   async translate(
     text: string,
     targetLanguage: string,
     context?: string
   ): Promise<string> {
-    if (text === "error") {
-      throw new Error("Translation failed");
+    if (text === 'error') {
+      throw new Error('Translation failed');
     }
     return `translated_${text}_${targetLanguage}`;
   }
@@ -28,11 +28,11 @@ class MockProvider implements TranslationProvider {
   }
 
   getSupportedLanguages(): string[] {
-    return ["en", "fr", "de", "es"];
+    return ['en', 'fr', 'de', 'es'];
   }
 }
 
-describe("TranslationOrchestrator", () => {
+describe('TranslationOrchestrator', () => {
   let orchestrator: TranslationOrchestrator;
   let mockProvider: MockProvider;
   let mockConfig: Config;
@@ -40,19 +40,19 @@ describe("TranslationOrchestrator", () => {
   beforeEach(() => {
     mockProvider = new MockProvider();
     mockConfig = {
-      watchPath: "./locales",
-      baseLanguage: "en",
-      targetLanguages: ["fr", "de"],
-      filePattern: "*.json",
+      watchPath: './locales',
+      baseLanguage: 'en',
+      targetLanguages: ['fr', 'de'],
+      filePattern: '*.json',
       provider: {
-        type: "openai",
-        config: { apiKey: "test-key" },
+        type: 'openai',
+        config: { apiKey: 'test-key' },
       },
       preserveFormatting: true,
       contextInjection: true,
       batchSize: 5,
       retryAttempts: 3,
-      logLevel: "info",
+      logLevel: 'info',
     };
 
     orchestrator = new TranslationOrchestrator(mockConfig);
@@ -62,13 +62,13 @@ describe("TranslationOrchestrator", () => {
     jest.clearAllMocks();
   });
 
-  describe("constructor", () => {
-    it("should create orchestrator with default options", () => {
+  describe('constructor', () => {
+    it('should create orchestrator with default options', () => {
       const defaultOrchestrator = new TranslationOrchestrator(mockConfig);
       expect(defaultOrchestrator).toBeInstanceOf(TranslationOrchestrator);
     });
 
-    it("should create orchestrator with custom options", () => {
+    it('should create orchestrator with custom options', () => {
       const customOrchestrator = new TranslationOrchestrator(mockConfig, {
         batchSize: 20,
         retryAttempts: 5,
@@ -81,68 +81,68 @@ describe("TranslationOrchestrator", () => {
     });
   });
 
-  describe("setProvider", () => {
-    it("should set provider successfully", () => {
+  describe('setProvider', () => {
+    it('should set provider successfully', () => {
       orchestrator.setProvider(mockProvider);
       expect(orchestrator.getProvider()).toBe(mockProvider);
     });
 
-    it("should emit providerChanged event", () => {
+    it('should emit providerChanged event', () => {
       const eventSpy = jest.fn();
-      orchestrator.on("providerChanged", eventSpy);
+      orchestrator.on('providerChanged', eventSpy);
 
       orchestrator.setProvider(mockProvider);
 
-      expect(eventSpy).toHaveBeenCalledWith({ provider: "mock" });
+      expect(eventSpy).toHaveBeenCalledWith({ provider: 'mock' });
     });
 
-    it("should throw error for invalid provider config", () => {
+    it('should throw error for invalid provider config', () => {
       const invalidProvider = {
         ...mockProvider,
         validateConfig: () => false,
       };
 
       expect(() => orchestrator.setProvider(invalidProvider as any)).toThrow(
-        "Invalid configuration for provider: mock"
+        'Invalid configuration for provider: mock'
       );
     });
   });
 
-  describe("getProvider", () => {
-    it("should return null when no provider is set", () => {
+  describe('getProvider', () => {
+    it('should return null when no provider is set', () => {
       expect(orchestrator.getProvider()).toBeNull();
     });
 
-    it("should return set provider", () => {
+    it('should return set provider', () => {
       orchestrator.setProvider(mockProvider);
       expect(orchestrator.getProvider()).toBe(mockProvider);
     });
   });
 
-  describe("utility methods", () => {
-    it("should get current batch status", () => {
+  describe('utility methods', () => {
+    it('should get current batch status', () => {
       expect(orchestrator.getCurrentBatch()).toBeNull();
     });
 
-    it("should check if translation is in progress", () => {
+    it('should check if translation is in progress', () => {
       expect(orchestrator.isTranslating()).toBe(false);
     });
 
-    it("should stop translation process", () => {
-      orchestrator["isProcessing"] = true;
-      orchestrator["currentBatch"] = {} as TranslationBatch;
+    it('should stop translation process', () => {
+      orchestrator['isProcessing'] = true;
+      orchestrator['currentBatch'] = {} as TranslationBatch;
 
       const eventSpy = jest.fn();
-      orchestrator.on("stopped", eventSpy);
+      orchestrator.on('stopped', eventSpy);
 
       orchestrator.stop();
 
-      expect(orchestrator["isProcessing"]).toBe(false);
-      expect(orchestrator["currentBatch"]).toBeNull();
+      expect(orchestrator['isProcessing']).toBe(false);
+      expect(orchestrator['currentBatch']).toBeNull();
       expect(eventSpy).toHaveBeenCalled();
     });
 
-    it("should get translation statistics", () => {
+    it('should get translation statistics', () => {
       orchestrator.setProvider(mockProvider);
 
       const stats = orchestrator.getStats();
@@ -150,7 +150,7 @@ describe("TranslationOrchestrator", () => {
       expect(stats).toEqual({
         isProcessing: false,
         currentBatch: null,
-        provider: "mock",
+        provider: 'mock',
       });
     });
   });

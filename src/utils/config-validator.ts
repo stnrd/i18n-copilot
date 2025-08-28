@@ -1,4 +1,4 @@
-import { Config } from "../types";
+import { Config } from '../types';
 
 export interface ValidationError {
   path: string;
@@ -15,7 +15,7 @@ export interface ValidationResult {
 
 export interface ValidationRule {
   required?: boolean;
-  type?: "string" | "number" | "boolean" | "array" | "object";
+  type?: 'string' | 'number' | 'boolean' | 'array' | 'object';
   minLength?: number;
   maxLength?: number;
   minValue?: number;
@@ -45,18 +45,18 @@ export class ConfigValidator {
 
     try {
       // Basic structure validation
-      if (!config || typeof config !== "object") {
+      if (!config || typeof config !== 'object') {
         errors.push({
-          path: "root",
-          message: "Configuration must be an object",
+          path: 'root',
+          message: 'Configuration must be an object',
           value: config,
-          expected: "object",
+          expected: 'object',
         });
         return { isValid: false, errors, warnings };
       }
 
       // Validate against schema
-      const schemaErrors = this.validateAgainstSchema(config, this.schema, "");
+      const schemaErrors = this.validateAgainstSchema(config, this.schema, '');
       errors.push(...schemaErrors);
 
       // Additional business logic validation
@@ -68,7 +68,7 @@ export class ConfigValidator {
       warnings.push(...businessWarnings);
     } catch (error) {
       errors.push({
-        path: "root",
+        path: 'root',
         message: `Validation failed with error: ${
           error instanceof Error ? error.message : String(error)
         }`,
@@ -98,8 +98,8 @@ export class ConfigValidator {
 
       // Handle dot notation in schema keys (e.g., "provider.type")
       let value: any;
-      if (key.includes(".")) {
-        const keyParts = key.split(".");
+      if (key.includes('.')) {
+        const keyParts = key.split('.');
         value = keyParts.reduce((obj, part) => obj?.[part], data);
       } else {
         value = data[key];
@@ -111,7 +111,7 @@ export class ConfigValidator {
           errors.push(error);
         }
       } else if (this.isValidationSchema(rule)) {
-        if (value && typeof value === "object") {
+        if (value && typeof value === 'object') {
           const nestedErrors = this.validateAgainstSchema(
             value,
             rule,
@@ -121,8 +121,8 @@ export class ConfigValidator {
         } else if ((rule as any).required !== false) {
           errors.push({
             path: currentPath,
-            message: "Required field is missing",
-            expected: "object",
+            message: 'Required field is missing',
+            expected: 'object',
           });
         }
       }
@@ -143,8 +143,8 @@ export class ConfigValidator {
     if (rule.required && (value === undefined || value === null)) {
       return {
         path,
-        message: "Required field is missing",
-        expected: "required value",
+        message: 'Required field is missing',
+        expected: 'required value',
       };
     }
 
@@ -164,7 +164,7 @@ export class ConfigValidator {
     }
 
     // String validations
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       if (rule.minLength && value.length < rule.minLength) {
         return {
           path,
@@ -194,7 +194,7 @@ export class ConfigValidator {
     }
 
     // Number validations
-    if (typeof value === "number") {
+    if (typeof value === 'number') {
       if (rule.minValue !== undefined && value < rule.minValue) {
         return {
           path,
@@ -239,9 +239,9 @@ export class ConfigValidator {
     if (rule.enum && !rule.enum.includes(value)) {
       return {
         path,
-        message: `Value must be one of: ${rule.enum.join(", ")}`,
+        message: `Value must be one of: ${rule.enum.join(', ')}`,
         value,
-        expected: `enum values: ${rule.enum.join(", ")}`,
+        expected: `enum values: ${rule.enum.join(', ')}`,
       };
     }
 
@@ -265,26 +265,26 @@ export class ConfigValidator {
     // Check if watch path exists and is accessible
     if (config.watchPath) {
       try {
-        const fs = require("fs");
+        const fs = require('fs');
         if (!fs.existsSync(config.watchPath)) {
           errors.push({
-            path: "watchPath",
-            message: "Watch path does not exist",
+            path: 'watchPath',
+            message: 'Watch path does not exist',
             value: config.watchPath,
           });
         } else {
           const stats = fs.statSync(config.watchPath);
           if (!stats.isDirectory()) {
             errors.push({
-              path: "watchPath",
-              message: "Watch path must be a directory",
+              path: 'watchPath',
+              message: 'Watch path must be a directory',
               value: config.watchPath,
             });
           }
         }
       } catch (error) {
         errors.push({
-          path: "watchPath",
+          path: 'watchPath',
           message: `Cannot access watch path: ${
             error instanceof Error ? error.message : String(error)
           }`,
@@ -296,10 +296,10 @@ export class ConfigValidator {
     // Validate language codes
     if (config.baseLanguage && !this.isValidLanguageCode(config.baseLanguage)) {
       errors.push({
-        path: "baseLanguage",
-        message: "Invalid language code format",
+        path: 'baseLanguage',
+        message: 'Invalid language code format',
         value: config.baseLanguage,
-        expected: "ISO 639-1 or 639-2 language code",
+        expected: 'ISO 639-1 or 639-2 language code',
       });
     }
 
@@ -308,9 +308,9 @@ export class ConfigValidator {
         if (!this.isValidLanguageCode(lang)) {
           errors.push({
             path: `targetLanguages[${index}]`,
-            message: "Invalid language code format",
+            message: 'Invalid language code format',
             value: lang,
-            expected: "ISO 639-1 or 639-2 language code",
+            expected: 'ISO 639-1 or 639-2 language code',
           });
         }
       });
@@ -320,17 +320,17 @@ export class ConfigValidator {
     if (config.provider) {
       if (!config.provider.type) {
         errors.push({
-          path: "provider.type",
-          message: "Provider type is required",
-          expected: "provider type",
+          path: 'provider.type',
+          message: 'Provider type is required',
+          expected: 'provider type',
         });
       }
 
       if (!config.provider.config) {
         errors.push({
-          path: "provider.config",
-          message: "Provider configuration is required",
-          expected: "provider config object",
+          path: 'provider.config',
+          message: 'Provider configuration is required',
+          expected: 'provider config object',
         });
       }
     }
@@ -338,10 +338,10 @@ export class ConfigValidator {
     // Validate numeric ranges
     if (config.batchSize && (config.batchSize < 1 || config.batchSize > 100)) {
       errors.push({
-        path: "batchSize",
-        message: "Batch size must be between 1 and 100",
+        path: 'batchSize',
+        message: 'Batch size must be between 1 and 100',
         value: config.batchSize,
-        expected: "1-100",
+        expected: '1-100',
       });
     }
 
@@ -350,10 +350,10 @@ export class ConfigValidator {
       (config.retryAttempts < 0 || config.retryAttempts > 10)
     ) {
       errors.push({
-        path: "retryAttempts",
-        message: "Retry attempts must be between 0 and 10",
+        path: 'retryAttempts',
+        message: 'Retry attempts must be between 0 and 10',
         value: config.retryAttempts,
-        expected: "0-10",
+        expected: '0-10',
       });
     }
 
@@ -369,21 +369,21 @@ export class ConfigValidator {
     // Warn about large batch sizes
     if (config.batchSize && config.batchSize > 50) {
       warnings.push(
-        "Large batch size may cause rate limiting issues with some LLM providers."
+        'Large batch size may cause rate limiting issues with some LLM providers.'
       );
     }
 
     // Warn about aggressive retry settings
     if (config.retryAttempts && config.retryAttempts > 5) {
       warnings.push(
-        "High retry attempts may cause excessive API usage and costs."
+        'High retry attempts may cause excessive API usage and costs.'
       );
     }
 
     // Warn about missing log level
     if (!config.logLevel) {
       warnings.push(
-        "No log level specified. Consider setting logLevel for better debugging."
+        'No log level specified. Consider setting logLevel for better debugging.'
       );
     }
 
@@ -397,57 +397,57 @@ export class ConfigValidator {
     return {
       watchPath: {
         required: true,
-        type: "string",
+        type: 'string',
         minLength: 1,
       },
       baseLanguage: {
         required: true,
-        type: "string",
+        type: 'string',
         minLength: 2,
         maxLength: 5,
       },
       targetLanguages: {
         required: true,
-        type: "array",
+        type: 'array',
         minLength: 1,
         maxLength: 50,
       },
       filePattern: {
-        type: "string",
+        type: 'string',
         minLength: 1,
       },
       // provider object is validated through provider.type and provider.config
-      "provider.type": {
+      'provider.type': {
         required: true,
-        type: "string",
-        enum: ["openai", "anthropic", "local", "custom"],
+        type: 'string',
+        enum: ['openai', 'anthropic', 'local', 'custom'],
       },
-      "provider.config": {
+      'provider.config': {
         required: true,
-        type: "object",
+        type: 'object',
       },
       preserveFormatting: {
-        type: "boolean",
+        type: 'boolean',
       },
       contextInjection: {
-        type: "boolean",
+        type: 'boolean',
       },
       batchSize: {
-        type: "number",
+        type: 'number',
         minValue: 1,
         maxValue: 100,
       },
       retryAttempts: {
-        type: "number",
+        type: 'number',
         minValue: 0,
         maxValue: 10,
       },
       createBackups: {
-        type: "boolean",
+        type: 'boolean',
       },
       logLevel: {
-        type: "string",
-        enum: ["debug", "info", "warn", "error"],
+        type: 'string',
+        enum: ['debug', 'info', 'warn', 'error'],
       },
     };
   }
@@ -458,16 +458,16 @@ export class ConfigValidator {
   private isValidationRule(value: any): value is ValidationRule {
     return (
       value &&
-      typeof value === "object" &&
-      ("required" in value ||
-        "type" in value ||
-        "minLength" in value ||
-        "maxLength" in value ||
-        "minValue" in value ||
-        "maxValue" in value ||
-        "pattern" in value ||
-        "enum" in value ||
-        "custom" in value)
+      typeof value === 'object' &&
+      ('required' in value ||
+        'type' in value ||
+        'minLength' in value ||
+        'maxLength' in value ||
+        'minValue' in value ||
+        'maxValue' in value ||
+        'pattern' in value ||
+        'enum' in value ||
+        'custom' in value)
     );
   }
 
@@ -475,7 +475,7 @@ export class ConfigValidator {
    * Check if value is a validation schema
    */
   private isValidationSchema(value: any): value is ValidationSchema {
-    return value && typeof value === "object" && !this.isValidationRule(value);
+    return value && typeof value === 'object' && !this.isValidationRule(value);
   }
 
   /**
@@ -483,17 +483,17 @@ export class ConfigValidator {
    */
   private validateType(value: any, expectedType: string): boolean {
     switch (expectedType) {
-      case "string":
-        return typeof value === "string";
-      case "number":
-        return typeof value === "number" && !isNaN(value);
-      case "boolean":
-        return typeof value === "boolean";
-      case "array":
+      case 'string':
+        return typeof value === 'string';
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'boolean':
+        return typeof value === 'boolean';
+      case 'array':
         return Array.isArray(value);
-      case "object":
+      case 'object':
         return (
-          typeof value === "object" && value !== null && !Array.isArray(value)
+          typeof value === 'object' && value !== null && !Array.isArray(value)
         );
       default:
         return false;
@@ -513,13 +513,13 @@ export class ConfigValidator {
    * Generate human-readable validation report
    */
   generateValidationReport(result: ValidationResult): string {
-    let report = "Configuration Validation Report\n";
-    report += "==================================\n\n";
+    let report = 'Configuration Validation Report\n';
+    report += '==================================\n\n';
 
     if (result.isValid) {
-      report += "✅ Configuration is valid!\n\n";
+      report += '✅ Configuration is valid!\n\n';
     } else {
-      report += "❌ Configuration has errors:\n\n";
+      report += '❌ Configuration has errors:\n\n';
 
       result.errors.forEach((error, index) => {
         report += `${index + 1}. ${error.path}: ${error.message}\n`;
@@ -529,16 +529,16 @@ export class ConfigValidator {
         if (error.expected) {
           report += `   Expected: ${error.expected}\n`;
         }
-        report += "\n";
+        report += '\n';
       });
     }
 
     if (result.warnings.length > 0) {
-      report += "⚠️  Warnings:\n\n";
+      report += '⚠️  Warnings:\n\n';
       result.warnings.forEach((warning, index) => {
         report += `${index + 1}. ${warning}\n`;
       });
-      report += "\n";
+      report += '\n';
     }
 
     return report;
