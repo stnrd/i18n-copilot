@@ -2,7 +2,6 @@
   "name": "translation-watcher-ai",
   "version": "0.1.0",
   "description": "A Node.js utility that watches translation files for new keys and automatically translates them using configurable LLM providers",
-  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
