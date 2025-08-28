@@ -6,12 +6,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "translation-watcher": "dist/cli/index.js"
+    "translation-watcher": "dist/cli/cli.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.mjs --watch",
     "test": "jest",
+    "test:watch": "jest --watch",
     "test:runner": "pnpm run build && node dist/core/__tests__/test-runner.js",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs --fix",
@@ -19,8 +20,8 @@
     "format:check": "prettier --check .",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run clean && pnpm run build",
-    "start": "node dist/cli/index.js",
-    "cli": "node dist/cli/index.js"
+    "start": "node dist/cli/cli.js",
+    "cli": "node dist/cli/cli.js"
   },
   "keywords": [
     "translation",
@@ -43,11 +44,15 @@
     "yaml": "^2.8.1"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@swc/core": "^1.13.5",
+    "@swc/jest": "^0.2.39",
     "@types/chokidar": "^2.1.7",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
+    "esbuild": "^0.25.9",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

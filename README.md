@@ -49,6 +49,55 @@ pnpm run build
 pnpm test
 ```
 
+## 🛠️ Build System
+
+This project uses **esbuild** for fast builds and **SWC** for Jest testing:
+
+### Build Commands
+
+```bash
+# Build the project (library + CLI)
+pnpm run build
+
+# Watch mode for development
+pnpm run dev
+
+# Clean build artifacts
+pnpm run clean
+```
+
+### Testing
+
+```bash
+# Run tests once
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run test runner (requires build first)
+pnpm run test:runner
+```
+
+### CLI Usage
+
+```bash
+# Run CLI with help
+pnpm run cli --help
+
+# Start the translation watcher
+pnpm start
+
+# Or run directly
+./dist/cli/cli.js --help
+```
+
+### Build Output
+
+- **`dist/index.js`** - Main library (ES modules)
+- **`dist/cli/index.js`** - CLI implementation (ES modules)  
+- **`dist/cli/cli.js`** - CLI executable wrapper (ES modules with shebang)
+
 ## ⚙️ Configuration
 
 Create a `translation-config.json` file:
