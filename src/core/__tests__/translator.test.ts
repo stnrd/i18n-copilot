@@ -1,11 +1,8 @@
 import {
   TranslationOrchestrator,
   TranslationProvider,
-  TranslationRequest,
-  TranslationResponse,
   TranslationBatch,
 } from '../translator';
-import { TranslationData } from '../parser';
 import { Config } from '../../types';
 
 // Mock provider implementation
@@ -15,6 +12,7 @@ class MockProvider implements TranslationProvider {
   async translate(
     text: string,
     targetLanguage: string,
+    // eslint-disable-next-line
     context?: string
   ): Promise<string> {
     if (text === 'error') {
@@ -23,6 +21,7 @@ class MockProvider implements TranslationProvider {
     return `translated_${text}_${targetLanguage}`;
   }
 
+  // eslint-disable-next-line
   validateConfig(config: any): boolean {
     return true;
   }

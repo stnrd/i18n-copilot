@@ -1,4 +1,4 @@
-import { Config } from '../types';
+import fs from 'fs';
 
 export interface ValidationError {
   path: string;
@@ -22,6 +22,7 @@ export interface ValidationRule {
   maxValue?: number;
   pattern?: RegExp;
   enum?: any[];
+  // eslint-disable-next-line
   custom?: (value: any, path: string) => ValidationError | null;
 }
 
@@ -265,7 +266,6 @@ export class ConfigValidator {
     // Check if watch path exists and is accessible
     if (config.watchPath) {
       try {
-        const fs = require('fs');
         if (!fs.existsSync(config.watchPath)) {
           errors.push({
             path: 'watchPath',

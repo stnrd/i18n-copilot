@@ -1,3 +1,5 @@
+/* eslint no-unused-vars: 0 */
+
 export interface TranslationProvider {
   name: string;
   translate(

@@ -25,6 +25,7 @@ export interface LoggerOptions {
 }
 
 export interface LogFormatter {
+  // eslint-disable-next-line
   format(entry: LogEntry): string;
 }
 
@@ -300,7 +301,6 @@ export class Logger extends EventEmitter {
 
     try {
       const fs = await import('fs/promises');
-      const path = await import('path');
 
       const stats = await fs.stat(this.filePath);
 

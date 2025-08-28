@@ -5,6 +5,9 @@ import { TranslationOrchestrator } from './translator';
 import { TranslationWatcher } from './watcher';
 import { Config } from '../types';
 import { defaultLogger, Logger } from '../utils/logger';
+import { OpenAIProvider } from '../providers/openai';
+import { AnthropicProvider } from '../providers/anthropic';
+import { LocalProvider } from '../providers/local';
 
 export interface AutoTranslatorOptions {
   logger?: Logger;
@@ -203,15 +206,12 @@ export class AutoTranslator extends EventEmitter {
 
       switch (this.config.provider.type) {
         case 'openai':
-          const { OpenAIProvider } = await import('../providers/openai');
           provider = new OpenAIProvider(this.config.provider.config as any);
           break;
         case 'anthropic':
-          const { AnthropicProvider } = await import('../providers/anthropic');
           provider = new AnthropicProvider(this.config.provider.config as any);
           break;
         case 'local':
-          const { LocalProvider } = await import('../providers/local');
           provider = new LocalProvider(this.config.provider.config as any);
           break;
         default:

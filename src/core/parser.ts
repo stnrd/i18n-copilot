@@ -41,7 +41,7 @@ export class TranslationParser {
       const content = await fs.readFile(filePath, 'utf-8');
       const format = this.detectFormat(filePath);
 
-      const data = await this.parseContent(content, format, filePath);
+      const data = await this.parseContent(content, format);
 
       return {
         data,
@@ -59,8 +59,7 @@ export class TranslationParser {
    */
   async parseContent(
     content: string,
-    format: string,
-    filePath?: string
+    format: string
   ): Promise<TranslationData> {
     switch (format) {
       case 'json':
@@ -69,7 +68,7 @@ export class TranslationParser {
         return this.parseYAML(content);
       case 'js':
       case 'ts':
-        return this.parseJavaScript(content, filePath);
+        return this.parseJavaScript(content);
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
@@ -111,7 +110,7 @@ export class TranslationParser {
       // Try to parse with error recovery
       try {
         return JSON.parse(cleanContent);
-      } catch (parseError) {
+      } catch {
         // Try to fix common JSON issues
         const fixedContent = this.fixCommonJSONIssues(cleanContent);
         return JSON.parse(fixedContent);
@@ -141,13 +140,10 @@ export class TranslationParser {
   /**
    * Parse JavaScript/TypeScript content
    */
-  private parseJavaScript(content: string, filePath?: string): TranslationData {
+  private parseJavaScript(content: string): TranslationData {
     try {
       // Remove export statements and module wrapper
       const cleanContent = this.cleanJavaScriptContent(content);
-
-      // Create a safe evaluation context
-      const context: any = {};
 
       // Use Function constructor for safer evaluation
       const evaluateFunction = new Function(
@@ -190,7 +186,7 @@ export class TranslationParser {
     );
 
     // Remove TypeScript type annotations
-    cleaned = cleaned.replace(/:\s*[a-zA-Z<>\[\]{}|&,()\s]+(?=\s*[,}])/g, '');
+    cleaned = cleaned.replace(/:\s*[a-zA-Z<>[\]{}|&,()\s]+(?=\s*[,}])/g, '');
 
     return cleaned;
   }

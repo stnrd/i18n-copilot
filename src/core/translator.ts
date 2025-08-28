@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import path from 'path';
 import fs from 'fs/promises';
 import { TranslationData, TranslationParser } from './parser';
-import { TranslationDiffDetector, DiffResult } from './diff-detector';
+import { TranslationDiffDetector } from './diff-detector';
 import { Config } from '../types';
 
 export interface TranslationRequest {
@@ -46,10 +46,15 @@ export interface TranslatorOptions {
 export abstract class TranslationProvider {
   abstract name: string;
   abstract translate(
+    // eslint-disable-next-line
     text: string,
+    // eslint-disable-next-line
     targetLanguage: string,
+    // eslint-disable-next-line
     context?: string
   ): Promise<string>;
+
+  // eslint-disable-next-line
   abstract validateConfig(config: any): boolean;
   abstract getSupportedLanguages(): string[];
 }

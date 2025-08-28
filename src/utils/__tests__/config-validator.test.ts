@@ -1,16 +1,12 @@
-import {
-  ConfigValidator,
-  ValidationResult,
-  ValidationError,
-} from '../config-validator';
+import { ConfigValidator } from '../config-validator';
 
 // Mock fs module for file system operations
-jest.mock('fs', () => ({
+const mockedFs = {
   existsSync: jest.fn().mockReturnValue(true),
   statSync: jest.fn().mockReturnValue({ isDirectory: () => true }),
-}));
+};
 
-const mockedFs = require('fs');
+jest.mock('fs', () => mockedFs);
 
 describe('ConfigValidator', () => {
   let validator: ConfigValidator;
