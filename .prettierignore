@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+coverage/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Config files that should maintain their format
+*.config.js
+*.config.mjs
+tsconfig.json
+jest.config.js
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+LICENSE
+TESTING.md
+TECHSPEC.md
+TODO
+
+# Kanban
+.kanbn/
+
+# GitHub
+.github/

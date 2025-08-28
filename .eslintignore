@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Config files
+*.config.js
+*.config.mjs
+
+# Documentation
+README.md
+LICENSE
+TESTING.md
+TECHSPEC.md
+TODO
+
+# Git
+.git/
+
+# Kanban
+.kanbn/
+
+# GitHub
+.github/
