@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs/promises';
+import packageJson from '../../package.json';
 
 // Import core components
 import {
@@ -45,9 +46,9 @@ class TranslationCLI {
 
   private setupCommands(): void {
     this.program
-      .name('translation-watcher')
+      .name('i18n-copilot')
       .description('AI-powered translation file watcher and translator')
-      .version('0.1.0');
+      .version(packageJson.version);
 
     // Watch command
     this.program
