@@ -131,7 +131,7 @@ export class TranslationParser {
         throw new Error('YAML must contain an object');
       }
 
-      return result as TranslationData;
+      return result;
     } catch (error) {
       throw new Error(`Invalid YAML: ${error}`);
     }
@@ -161,7 +161,7 @@ export class TranslationParser {
         throw new Error('JavaScript file must export an object');
       }
 
-      return result as TranslationData;
+      return result;
     } catch (error) {
       throw new Error(`Invalid JavaScript/TypeScript: ${error}`);
     }
