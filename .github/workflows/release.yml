@@ -59,6 +59,7 @@ jobs:
           commit_message: Release Version ${{ github.ref_name }} [skip ci]
           branch: main
           push_options: --force
+          file_pattern: "package.json"
 
       - name: Publish to npm
         run: npm publish
