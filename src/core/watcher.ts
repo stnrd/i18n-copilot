@@ -31,7 +31,7 @@ export class TranslationWatcher extends EventEmitter {
     this.config = config;
     this.options = {
       debounceMs: 300,
-      ignorePatterns: ['**/node_modules/**', '**/.git/**', '**/*.backup'],
+      ignorePatterns: ['**/node_modules/**', '**/.git/**'],
       followSymlinks: false,
       awaitWriteFinish: true,
       debug: false, // Default debug mode

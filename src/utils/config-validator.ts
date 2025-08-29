@@ -467,9 +467,7 @@ export class ConfigValidator {
         minValue: 0,
         maxValue: 10,
       },
-      createBackups: {
-        type: 'boolean',
-      },
+
       logLevel: {
         type: 'string',
         enum: ['debug', 'info', 'warn', 'error'],

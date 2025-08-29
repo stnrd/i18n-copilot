@@ -1,6 +1,4 @@
 import { EventEmitter } from 'events';
-import path from 'path';
-import fs from 'fs/promises';
 import { TranslationData, TranslationParser } from './parser';
 import { TranslationDiffDetector } from './diff-detector';
 import { Config } from '../types/index';
@@ -131,12 +129,6 @@ export class TranslationOrchestrator extends EventEmitter {
       // Parse base language file
       const baseFile = await this.parser.parseFile(baseLanguageFile);
 
-      // Check for changed keys by comparing with previous backup
-      const changedKeys = await this.detectChangedKeys(
-        baseLanguageFile,
-        baseFile.data
-      );
-
       // Process each target language file
       for (const targetFile of targetLanguageFiles) {
         try {
@@ -145,8 +137,7 @@ export class TranslationOrchestrator extends EventEmitter {
             baseFile.data,
             targetFileData.data,
             this.config.baseLanguage,
-            targetFile,
-            changedKeys
+            targetFile
           );
 
           if (batch && batch.requests.length > 0) {
@@ -158,11 +149,6 @@ export class TranslationOrchestrator extends EventEmitter {
             error: error instanceof Error ? error.message : String(error),
           });
         }
-      }
-
-      // Update the backup after successful processing
-      if (batches.length > 0) {
-        await this.updateBaseFileBackup(baseLanguageFile, baseFile.data);
       }
     } finally {
       this.isProcessing = false;
@@ -178,23 +164,14 @@ export class TranslationOrchestrator extends EventEmitter {
     baseData: TranslationData,
     targetData: TranslationData,
     sourceLanguage: string,
-    targetFilePath: string,
-    changedKeys?: string[]
+    targetFilePath: string
   ): Promise<TranslationBatch | null> {
-    let keysNeedingTranslation: string[];
-
-    if (changedKeys && changedKeys.length > 0) {
-      // If we have changed keys from base file, only translate those
-      // but only if they're missing/empty in the target file
-      keysNeedingTranslation = changedKeys;
-    } else {
-      // Normal incremental translation - missing or empty keys
-      keysNeedingTranslation =
-        this.diffDetector.getKeysNeedingIncrementalTranslation(
-          baseData,
-          targetData
-        );
-    }
+    // Always use incremental translation - only translate missing or empty keys
+    const keysNeedingTranslation =
+      this.diffDetector.getKeysNeedingIncrementalTranslation(
+        baseData,
+        targetData
+      );
 
     if (keysNeedingTranslation.length === 0) {
       return null;
@@ -423,112 +400,6 @@ export class TranslationOrchestrator extends EventEmitter {
     this.isProcessing = false;
     this.currentBatch = null;
     this.emit('stopped');
-  }
-
-  /**
-   * Detect which keys have changed in the base language file
-   */
-  private async detectChangedKeys(
-    baseLanguageFile: string,
-    currentBaseData: TranslationData
-  ): Promise<string[]> {
-    try {
-      const backupFile = this.getBackupFilePath(baseLanguageFile);
-      const backupExists = await this.fileExists(backupFile);
-
-      if (!backupExists) {
-        // No backup exists, treat all keys as "new" for first run
-        return this.diffDetector['extractAllKeys'](currentBaseData);
-      }
-
-      const backupContent = await this.readFile(backupFile);
-      const previousBaseData = JSON.parse(backupContent);
-
-      return this.diffDetector.getChangedKeys(
-        currentBaseData,
-        previousBaseData
-      );
-    } catch (error) {
-      // If backup is corrupted or missing, treat all keys as new
-      console.warn(
-        'Could not read backup file, treating all keys as new:',
-        error
-      );
-      return this.diffDetector['extractAllKeys'](currentBaseData);
-    }
-  }
-
-  /**
-   * Update the backup file with current base language data
-   */
-  private async updateBaseFileBackup(
-    baseLanguageFile: string,
-    baseData: TranslationData
-  ): Promise<void> {
-    try {
-      const backupFile = this.getBackupFilePath(baseLanguageFile);
-      const backupDir = path.dirname(backupFile);
-
-      // Ensure backup directory exists
-      await this.ensureDirectoryExists(backupDir);
-
-      // Write backup file
-      await this.writeFile(backupFile, JSON.stringify(baseData, null, 2));
-    } catch (error) {
-      console.warn('Could not create backup file:', error);
-      // Don't throw - backup failure shouldn't stop translation
-    }
-  }
-
-  /**
-   * Get the backup file path for a base language file
-   */
-  private getBackupFilePath(baseLanguageFile: string): string {
-    const fileName = path.basename(
-      baseLanguageFile,
-      path.extname(baseLanguageFile)
-    );
-    const dir = path.dirname(baseLanguageFile);
-    return path.join(dir, '.backups', `${fileName}.backup.json`);
-  }
-
-  /**
-   * Check if a file exists
-   */
-  private async fileExists(filePath: string): Promise<boolean> {
-    try {
-      await fs.access(filePath);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Read a file
-   */
-  private async readFile(filePath: string): Promise<string> {
-    return fs.readFile(filePath, 'utf-8');
-  }
-
-  /**
-   * Write a file
-   */
-  private async writeFile(filePath: string, content: string): Promise<void> {
-    return fs.writeFile(filePath, content, 'utf-8');
-  }
-
-  /**
-   * Ensure directory exists
-   */
-  private async ensureDirectoryExists(dirPath: string): Promise<void> {
-    try {
-      await fs.mkdir(dirPath, { recursive: true });
-    } catch (error) {
-      if ((error as any).code !== 'EEXIST') {
-        throw error;
-      }
-    }
   }
 
   /**

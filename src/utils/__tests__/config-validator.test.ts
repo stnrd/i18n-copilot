@@ -1,10 +1,27 @@
 import { ConfigValidator } from '../config-validator';
 
-// Mock fs module for file system operations
-jest.mock('fs', () => ({
+// Mock the dynamic import of fs module
+const mockFs = {
   existsSync: jest.fn().mockReturnValue(true),
   statSync: jest.fn().mockReturnValue({ isDirectory: () => true }),
-}));
+};
+
+// Mock the fs module at the module level
+jest.mock('fs', () => mockFs, { virtual: true });
+
+// Mock the dynamic import by patching the global import function
+const mockImport = jest.fn().mockImplementation((moduleName: string) => {
+  if (moduleName === 'fs') {
+    return Promise.resolve(mockFs);
+  }
+  throw new Error(`Module ${moduleName} not found`);
+});
+
+// Patch the global import function
+Object.defineProperty(global, 'import', {
+  value: mockImport,
+  writable: true,
+});
 
 describe('ConfigValidator', () => {
   let validator: ConfigValidator;
@@ -14,10 +31,8 @@ describe('ConfigValidator', () => {
     jest.clearAllMocks();
 
     // Reset fs mocks to default values
-    // eslint-disable-next-line
-    const fs = jest.mocked(require('fs'));
-    fs.existsSync.mockReturnValue(true);
-    fs.statSync.mockReturnValue({ isDirectory: () => true });
+    mockFs.existsSync.mockReturnValue(true);
+    mockFs.statSync.mockReturnValue({ isDirectory: () => true });
   });
 
   describe('constructor', () => {
@@ -27,7 +42,7 @@ describe('ConfigValidator', () => {
   });
 
   describe('validateConfig', () => {
-    it('should validate a complete valid configuration', () => {
+    it('should validate a complete valid configuration', async () => {
       const validConfig = {
         watchPath: '/path/to/watch',
         baseLanguage: 'en',
@@ -41,15 +56,15 @@ describe('ConfigValidator', () => {
         logLevel: 'info',
       };
 
-      const result = validator.validateConfig(validConfig);
+      const result = await validator.validateConfig(validConfig);
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
       // Note: warnings are generated based on business logic, not schema validation
     });
 
-    it('should reject null configuration', () => {
-      const result = validator.validateConfig(null);
+    it('should reject null configuration', async () => {
+      const result = await validator.validateConfig(null);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -57,8 +72,8 @@ describe('ConfigValidator', () => {
       expect(result.errors[0]?.message).toBe('Configuration must be an object');
     });
 
-    it('should reject undefined configuration', () => {
-      const result = validator.validateConfig(undefined);
+    it('should reject undefined configuration', async () => {
+      const result = await validator.validateConfig(undefined);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -66,8 +81,8 @@ describe('ConfigValidator', () => {
       expect(result.errors[0]?.message).toBe('Configuration must be an object');
     });
 
-    it('should reject non-object configuration', () => {
-      const result = validator.validateConfig('not an object');
+    it('should reject non-object configuration', async () => {
+      const result = await validator.validateConfig('not an object');
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -75,7 +90,7 @@ describe('ConfigValidator', () => {
       expect(result.errors[0]?.message).toBe('Configuration must be an object');
     });
 
-    it('should handle validation errors gracefully', () => {
+    it('should handle validation errors gracefully', async () => {
       const invalidConfig = {
         watchPath: '', // Empty string violates minLength
         baseLanguage: 'invalid', // Too long
@@ -88,7 +103,7 @@ describe('ConfigValidator', () => {
         retryAttempts: 15, // Exceeds maxValue
       };
 
-      const result = validator.validateConfig(invalidConfig);
+      const result = await validator.validateConfig(invalidConfig);
 
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -96,13 +111,13 @@ describe('ConfigValidator', () => {
   });
 
   describe('schema validation', () => {
-    it('should validate required fields', () => {
+    it('should validate required fields', async () => {
       const config = {
         // Missing required fields
         filePattern: '*.json',
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -123,7 +138,7 @@ describe('ConfigValidator', () => {
       // Note: provider is now validated through provider.type and provider.config
     });
 
-    it('should validate string type constraints', () => {
+    it('should validate string type constraints', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -132,7 +147,7 @@ describe('ConfigValidator', () => {
         filePattern: '', // Empty string violates minLength: 1
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -142,7 +157,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate number type constraints', () => {
+    it('should validate number type constraints', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -152,7 +167,7 @@ describe('ConfigValidator', () => {
         retryAttempts: 11, // Above maxValue
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -167,7 +182,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate array type constraints', () => {
+    it('should validate array type constraints', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -175,7 +190,7 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -185,7 +200,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate enum values', () => {
+    it('should validate enum values', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -194,7 +209,7 @@ describe('ConfigValidator', () => {
         logLevel: 'invalid-level',
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -211,10 +226,8 @@ describe('ConfigValidator', () => {
   });
 
   describe('business logic validation', () => {
-    it('should validate watch path existence', () => {
-      // eslint-disable-next-line
-      const fs = jest.mocked(require('fs'));
-      fs.existsSync.mockReturnValue(false);
+    it('should validate watch path existence', async () => {
+      mockFs.existsSync.mockReturnValue(false);
 
       const config = {
         watchPath: '/nonexistent/path',
@@ -223,7 +236,7 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -233,11 +246,9 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate watch path is a directory', () => {
-      // eslint-disable-next-line
-      const fs = jest.mocked(require('fs'));
-      fs.existsSync.mockReturnValue(true);
-      fs.statSync.mockReturnValue({ isDirectory: () => false });
+    it('should validate watch path is a directory', async () => {
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.statSync.mockReturnValue({ isDirectory: () => false });
 
       const config = {
         watchPath: '/path/to/file.txt',
@@ -246,7 +257,7 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -257,7 +268,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate language code format', () => {
+    it('should validate language code format', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'invalid-language-code',
@@ -265,7 +276,7 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -284,7 +295,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should accept valid language codes', () => {
+    it('should accept valid language codes', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -292,12 +303,12 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(true);
     });
 
-    it('should validate provider configuration', () => {
+    it('should validate provider configuration', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -307,7 +318,7 @@ describe('ConfigValidator', () => {
         },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -322,7 +333,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should validate numeric ranges', () => {
+    it('should validate numeric ranges', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -332,7 +343,7 @@ describe('ConfigValidator', () => {
         retryAttempts: 15, // Above maximum
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -349,7 +360,7 @@ describe('ConfigValidator', () => {
   });
 
   describe('warnings generation', () => {
-    it('should warn about large batch sizes', () => {
+    it('should warn about large batch sizes', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -358,7 +369,7 @@ describe('ConfigValidator', () => {
         batchSize: 75,
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(true);
       expect(result.warnings.some(w => w.includes('Large batch size'))).toBe(
@@ -366,7 +377,7 @@ describe('ConfigValidator', () => {
       );
     });
 
-    it('should warn about aggressive retry settings', () => {
+    it('should warn about aggressive retry settings', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -375,7 +386,7 @@ describe('ConfigValidator', () => {
         retryAttempts: 8,
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(true);
       expect(result.warnings.some(w => w.includes('High retry attempts'))).toBe(
@@ -383,7 +394,7 @@ describe('ConfigValidator', () => {
       );
     });
 
-    it('should warn about missing log level', () => {
+    it('should warn about missing log level', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -392,7 +403,7 @@ describe('ConfigValidator', () => {
         // No logLevel specified
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(true);
       expect(result.warnings.some(w => w.includes('log level'))).toBe(true);
@@ -400,7 +411,7 @@ describe('ConfigValidator', () => {
   });
 
   describe('validation report generation', () => {
-    it('should generate report for valid configuration', () => {
+    it('should generate report for valid configuration', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -408,20 +419,20 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       const report = validator.generateValidationReport(result);
 
       expect(report).toContain('✅ Configuration is valid!');
       expect(report).toContain('Configuration Validation Report');
     });
 
-    it('should generate report for invalid configuration', () => {
+    it('should generate report for invalid configuration', async () => {
       const config = {
         // Missing required fields
         filePattern: '*.json',
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       const report = validator.generateValidationReport(result);
 
       expect(report).toContain('❌ Configuration has errors:');
@@ -429,7 +440,7 @@ describe('ConfigValidator', () => {
       expect(report).toContain('baseLanguage: Required field is missing');
     });
 
-    it('should include warnings in report', () => {
+    it('should include warnings in report', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -438,7 +449,7 @@ describe('ConfigValidator', () => {
         // No logLevel specified
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       const report = validator.generateValidationReport(result);
 
       expect(report).toContain('⚠️  Warnings:');
@@ -447,10 +458,8 @@ describe('ConfigValidator', () => {
   });
 
   describe('edge cases and error handling', () => {
-    it('should handle fs module errors gracefully', () => {
-      // eslint-disable-next-line
-      const fs = jest.mocked(require('fs'));
-      fs.existsSync.mockImplementation(() => {
+    it('should handle fs module errors gracefully', async () => {
+      mockFs.existsSync.mockImplementation(() => {
         throw new Error('Permission denied');
       });
 
@@ -461,7 +470,7 @@ describe('ConfigValidator', () => {
         provider: { type: 'openai', config: {} },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -473,7 +482,7 @@ describe('ConfigValidator', () => {
       ).toBe(true);
     });
 
-    it('should handle validation exceptions', () => {
+    it('should handle validation exceptions', async () => {
       // Create a config that would cause validation to throw
       const config = {
         watchPath: '/path',
@@ -491,7 +500,7 @@ describe('ConfigValidator', () => {
           throw new Error('Unexpected validation error');
         });
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -506,7 +515,7 @@ describe('ConfigValidator', () => {
       (validator as any).validateBusinessRules = originalValidateBusinessRules;
     });
 
-    it('should handle custom validation functions', () => {
+    it('should handle custom validation functions', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -531,7 +540,7 @@ describe('ConfigValidator', () => {
         },
       };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
       expect(
@@ -545,7 +554,7 @@ describe('ConfigValidator', () => {
   });
 
   describe('type validation', () => {
-    it('should validate string types correctly', () => {
+    it('should validate string types correctly', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -558,13 +567,13 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.stringField = { type: 'string', minLength: 5 };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
 
-    it('should validate number types correctly', () => {
+    it('should validate number types correctly', async () => {
       const config = {
-        watchPath: '/path',
+        watchPath: 'path',
         baseLanguage: 'en',
         targetLanguages: ['es'],
         provider: { type: 'openai', config: {} },
@@ -575,11 +584,11 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.numberField = { type: 'number', minValue: 0, maxValue: 100 };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
 
-    it('should validate boolean types correctly', () => {
+    it('should validate boolean types correctly', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -592,11 +601,11 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.booleanField = { type: 'boolean' };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
 
-    it('should validate array types correctly', () => {
+    it('should validate array types correctly', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -609,11 +618,11 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.arrayField = { type: 'array', minLength: 2, maxLength: 5 };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
 
-    it('should validate object types correctly', () => {
+    it('should validate object types correctly', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -626,13 +635,13 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.objectField = { type: 'object' };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
   });
 
   describe('pattern validation', () => {
-    it('should validate string patterns correctly', () => {
+    it('should validate string patterns correctly', async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -645,11 +654,11 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.patternField = { type: 'string', pattern: /^[a-z]+\d+$/ };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(true);
     });
 
-    it("should reject strings that don't match pattern", () => {
+    it("should reject strings that don't match pattern", async () => {
       const config = {
         watchPath: '/path',
         baseLanguage: 'en',
@@ -662,7 +671,7 @@ describe('ConfigValidator', () => {
       const schema = (validator as any).schema;
       schema.patternField = { type: 'string', pattern: /^[a-z]+\d+$/ };
 
-      const result = validator.validateConfig(config);
+      const result = await validator.validateConfig(config);
       expect(result.isValid).toBe(false);
       expect(
         result.errors.some(
