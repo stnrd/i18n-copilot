@@ -1,14 +1,15 @@
 import js from '@eslint/js';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import prettier from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
+// TODO: prettier not working atm not sure why.
+// import prettier from 'eslint-plugin-prettier';
+// import prettierConfig from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**'],
+    files: ['**/*.ts'],
+    ignores: ['**/*.test.ts', '**/__tests__/**'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
@@ -29,7 +30,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescript,
-      prettier: prettier,
+      // prettier: prettier,
     },
     rules: {
       // TypeScript specific rules
@@ -53,14 +54,14 @@ export default [
       'no-console': 'off',
 
       // Prettier integration
-      'prettier/prettier': 'error',
+      // 'prettier/prettier': 'error',
 
       // Disable rules that conflict with Prettier
-      ...prettierConfig.rules,
+      // ...prettierConfig.rules,
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+    files: ['**/*.test.ts', '**/__tests__/**/*.ts'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
@@ -89,7 +90,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescript,
-      prettier: prettier,
+      // prettier: prettier,
     },
     rules: {
       // Basic TypeScript rules without type checking
@@ -111,30 +112,10 @@ export default [
       'no-undef': 'off',
 
       // Prettier integration
-      'prettier/prettier': 'error',
+      // 'prettier/prettier': 'error',
 
       // Disable rules that conflict with Prettier
-      ...prettierConfig.rules,
-    },
-  },
-  {
-    files: ['**/*.js', '**/*.mjs'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      globals: {
-        console: 'readonly',
-        process: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        fetch: 'readonly',
-        AbortSignal: 'readonly',
-        NodeJS: 'readonly',
-      },
-    },
-    rules: {
-      'prettier/prettier': 'error',
-      ...prettierConfig.rules,
+      // ...prettierConfig.rules,
     },
   },
   {

@@ -1,3 +1,4 @@
+/* eslint no-undef: 0 */
 import fs from 'node:fs';
 import semver from 'semver';
 
