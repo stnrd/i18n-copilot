@@ -40,7 +40,7 @@ class TranslationCLI {
   constructor() {
     this.program = new Command();
     this.logger = defaultLogger;
-    this.configValidator = new ConfigValidator();
+    this.configValidator = new ConfigValidator(this.logger);
     this.setupCommands();
   }
 
@@ -57,7 +57,7 @@ class TranslationCLI {
       .option(
         '-c, --config <path>',
         'Path to configuration file',
-        './translation-config.json'
+        './i18n-copilot.config.json'
       )
       .option('-p, --path <path>', 'Directory to watch for translation files')
       .option('-b, --base <language>', 'Base language code (e.g., en)')
@@ -97,7 +97,7 @@ class TranslationCLI {
     this.program
       .command('init')
       .description('Initialize a new translation project')
-      .option('-p, --path <path>', 'Project directory', './translation-project')
+      .option('-p, --path <path>', 'Project directory', '.')
       .option('--base <language>', 'Base language code', 'en')
       .option(
         '--targets <languages>',
@@ -105,6 +105,10 @@ class TranslationCLI {
         'fr,de,es'
       )
       .option('--provider <type>', 'LLM provider type', 'openai')
+      .option(
+        '--example',
+        'Generate example folder structure with locales and README'
+      )
       .action(async options => {
         await this.initCommand(options);
       });
@@ -133,7 +137,7 @@ class TranslationCLI {
       .option(
         '-c, --config <path>',
         'Path to configuration file',
-        './translation-config.json'
+        './i18n-copilot.config.json'
       )
       .action(async (file, options) => {
         await this.translateCommand(file, options);
@@ -149,7 +153,7 @@ class TranslationCLI {
       this.config = await this.loadOrCreateConfig(options);
 
       // Validate configuration
-      const validation = this.configValidator.validateConfig(this.config);
+      const validation = await this.configValidator.validateConfig(this.config);
       if (!validation.isValid) {
         this.logger.error(
           'Configuration validation failed, path: ' +
@@ -200,13 +204,13 @@ class TranslationCLI {
 
   private async validateCommand(options: any): Promise<void> {
     try {
-      const configPath = path.resolve(options.config);
+      const configPath = path.resolve(process.cwd(), options.config);
       this.logger.info(`Validating configuration: ${configPath}`);
 
       const configContent = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(configContent);
 
-      const validation = this.configValidator.validateConfig(config);
+      const validation = await this.configValidator.validateConfig(config);
       console.log(this.configValidator.generateValidationReport(validation));
 
       if (validation.isValid) {
@@ -227,7 +231,7 @@ class TranslationCLI {
 
   private async initCommand(options: any): Promise<void> {
     try {
-      const projectPath = path.resolve(options.path);
+      const projectPath = path.resolve(process.cwd(), options.path);
       this.logger.info(`Initializing translation project: ${projectPath}`);
 
       // Create project directory
@@ -260,50 +264,62 @@ class TranslationCLI {
         logLevel: 'info',
       };
 
-      const configPath = path.join(projectPath, 'translation-config.json');
+      const configPath = path.join(projectPath, 'i18n-copilot.config.json');
       await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
-      // Create locales directory structure
-      const localesPath = path.join(projectPath, 'locales');
-      await fs.mkdir(localesPath, { recursive: true });
-
-      // Create base language file
-      const baseLangPath = path.join(localesPath, `${options.base}.json`);
-      const baseLangContent = {
-        welcome: 'Welcome',
-        hello: 'Hello',
-        goodbye: 'Goodbye',
-      };
-      await fs.writeFile(
-        baseLangPath,
-        JSON.stringify(baseLangContent, null, 2)
+      this.logger.info('✅ Configuration file created successfully!');
+      this.logger.info(`Configuration file: ${configPath}`);
+      this.logger.info(`Base language: ${options.base}`);
+      this.logger.info(
+        `Target languages: ${config.targetLanguages.join(', ')}`
       );
+      this.logger.info(`Provider: ${options.provider}`);
 
-      // Create target language files
-      for (const lang of config.targetLanguages) {
-        const targetLangPath = path.join(localesPath, `${lang}.json`);
-        const targetLangContent = {
-          welcome: '',
-          hello: '',
-          goodbye: '',
+      // Only create example folder structure if --example flag is passed
+      if (options.example) {
+        this.logger.info('Creating example folder structure...');
+
+        // Create locales directory structure
+        const localesPath = path.join(projectPath, 'locales');
+        await fs.mkdir(localesPath, { recursive: true });
+
+        // Create base language file
+        const baseLangPath = path.join(localesPath, `${options.base}.json`);
+        const baseLangContent = {
+          welcome: 'Welcome',
+          hello: 'Hello',
+          goodbye: 'Goodbye',
         };
         await fs.writeFile(
-          targetLangPath,
-          JSON.stringify(targetLangContent, null, 2)
+          baseLangPath,
+          JSON.stringify(baseLangContent, null, 2)
         );
-      }
 
-      // Create README
-      const readmePath = path.join(projectPath, 'README.md');
-      const readmeContent = `# Translation Project
+        // Create target language files
+        for (const lang of config.targetLanguages) {
+          const targetLangPath = path.join(localesPath, `${lang}.json`);
+          const targetLangContent = {
+            welcome: '',
+            hello: '',
+            goodbye: '',
+          };
+          await fs.writeFile(
+            targetLangPath,
+            JSON.stringify(targetLangContent, null, 2)
+          );
+        }
 
-This project uses translation-watcher-ai to automatically translate files.
+        // Create README
+        const readmePath = path.join(projectPath, 'README.md');
+        const readmeContent = `# Translation Project
+
+This project uses i18n-copilot to automatically translate files.
 
 ## Setup
 
 1. Install dependencies: \`npm install\`
-2. Configure your API key in \`translation-config.json\`
-3. Run: \`translation-watcher watch\`
+2. Configure your API key in \`i18n-copilot.config.json\`
+3. Run: \`i18n-copilot watch\`
 
 ## File Structure
 
@@ -315,25 +331,24 @@ locales/
 
 ## Commands
 
-- \`translation-watcher watch\` - Start watching for changes
-- \`translation-watcher validate -c translation-config.json\` - Validate configuration
+- \`i18n-copilot watch\` - Start watching for changes
+- \`i18n-copilot validate -c i18n-copilot.config.json\` - Validate configuration
 `;
 
-      await fs.writeFile(readmePath, readmeContent);
+        await fs.writeFile(readmePath, readmeContent);
+
+        this.logger.info('✅ Example folder structure created successfully!');
+      }
 
       this.logger.info('✅ Translation project initialized successfully!');
       this.logger.info(`Project created at: ${projectPath}`);
-      this.logger.info(`Configuration file: ${configPath}`);
-      this.logger.info(`Base language: ${options.base}`);
-      this.logger.info(
-        `Target languages: ${config.targetLanguages.join(', ')}`
-      );
-      this.logger.info(`Provider: ${options.provider}`);
       this.logger.info('');
       this.logger.info('Next steps:');
       this.logger.info(`1. cd ${projectPath}`);
-      this.logger.info('2. Edit translation-config.json with your API key');
-      this.logger.info('3. Run: translation-watcher watch');
+      this.logger.info(
+        '2. Edit i18n-copilot.config.json with your API key and locale path'
+      );
+      this.logger.info('3. Run: i18n-copilot watch');
     } catch (error) {
       this.logger.error(
         'Failed to initialize project',
@@ -404,7 +419,7 @@ locales/
       this.config = await this.loadOrCreateConfig(options);
 
       // Validate configuration
-      const validation = this.configValidator.validateConfig(this.config);
+      const validation = await this.configValidator.validateConfig(this.config);
       if (!validation.isValid) {
         this.logger.error('Configuration validation failed');
         console.log(this.configValidator.generateValidationReport(validation));
@@ -445,7 +460,7 @@ locales/
     try {
       // Try to load from config file
       if (options.config) {
-        const configPath = path.resolve(options.config);
+        const configPath = path.resolve(process.cwd(), options.config);
         const configContent = await fs.readFile(configPath, 'utf-8');
         return JSON.parse(configContent);
       }

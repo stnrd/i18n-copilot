@@ -1,4 +1,4 @@
-import fs from 'fs';
+import path from 'path';
 
 export interface ValidationError {
   path: string;
@@ -32,15 +32,17 @@ export interface ValidationSchema {
 
 export class ConfigValidator {
   private schema: ValidationSchema;
+  private logger?: any;
 
-  constructor() {
+  constructor(logger?: any) {
     this.schema = this.buildDefaultSchema();
+    this.logger = logger;
   }
 
   /**
    * Validate configuration object
    */
-  validateConfig(config: any): ValidationResult {
+  async validateConfig(config: any): Promise<ValidationResult> {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
@@ -61,7 +63,7 @@ export class ConfigValidator {
       errors.push(...schemaErrors);
 
       // Additional business logic validation
-      const businessErrors = this.validateBusinessRules(config);
+      const businessErrors = await this.validateBusinessRules(config);
       errors.push(...businessErrors);
 
       // Generate warnings for potential issues
@@ -260,13 +262,36 @@ export class ConfigValidator {
   /**
    * Validate business logic rules
    */
-  private validateBusinessRules(config: any): ValidationError[] {
+  private async validateBusinessRules(config: any): Promise<ValidationError[]> {
     const errors: ValidationError[] = [];
 
     // Check if watch path exists and is accessible
     if (config.watchPath) {
       try {
-        if (!fs.existsSync(config.watchPath)) {
+        // Try to access fs module - if not available, skip file system validation
+        let fs: any;
+        try {
+          fs = await import('fs');
+        } catch {
+          // fs module not available, skip file system validation
+          this.logger?.warn(
+            'File system module not available, skipping path validation'
+          );
+          return errors;
+        }
+
+        // Check if the required functions exist
+        if (
+          typeof fs.existsSync !== 'function' ||
+          typeof fs.statSync !== 'function'
+        ) {
+          this.logger?.warn(
+            'File system functions not available, skipping path validation'
+          );
+          return errors;
+        }
+
+        if (!fs.existsSync(path.resolve(process.cwd(), config.watchPath))) {
           errors.push({
             path: 'watchPath',
             message: 'Watch path does not exist',

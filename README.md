@@ -99,7 +99,7 @@ pnpm start
 
 ## ⚙️ Configuration
 
-Create a `translation-config.json` file:
+Create a `i18n-copilot.config.json` file:
 
 ```json
 {
@@ -151,7 +151,7 @@ i18n-copilot translate ./locales/en.json -c ./my-config.json
 
 ```bash
 # Validate configuration
-i18n-copilot validate -c ./translation-config.json
+i18n-copilot validate -c ./i18n-copilot.config.json
 
 # Show status
 i18n-copilot status
