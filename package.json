@@ -13,7 +13,7 @@
     "dev": "node esbuild.config.js --watch",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:runner": "pnpm run build && node dist/core/__tests__/test-runner.js",
+    "test:runner": "node esbuild.config.js --runner && node dist/core/__tests__/test-runner.js",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs --fix",
     "format": "prettier --write .",

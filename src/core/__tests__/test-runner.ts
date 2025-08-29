@@ -2,6 +2,7 @@
 
 import { AutoTranslator } from '../auto-translator.js';
 import { Config } from '../../types/index.js';
+import { MockTranslationServer } from './mock-server.js';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -11,6 +12,12 @@ import fs from 'fs/promises';
 async function runDemo() {
   console.log('🚀 Starting Translation Manager Demo\n');
 
+  // Start mock server in background
+  console.log('🔧 Starting mock translation server...');
+  const mockServer = MockTranslationServer.getInstance();
+  await mockServer.start();
+  console.log('✅ Mock server started successfully\n');
+
   // Create test configuration
   const config: Config = {
     watchPath: './test-locales',
@@ -18,10 +25,9 @@ async function runDemo() {
     targetLanguages: ['fr', 'de'],
     filePattern: '.*\\.json$',
     provider: {
-      type: 'openai',
+      type: 'local',
       config: {
-        apiKey: 'demo-key',
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
       },
     },
     preserveFormatting: true,
@@ -68,7 +74,7 @@ async function runDemo() {
     await manager.start();
 
     // Wait a moment for startup
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await sleep(1000);
 
     // Check status
     const status = manager.getStatus();
@@ -81,10 +87,12 @@ async function runDemo() {
     );
     console.log(`- Provider: ${status.config.provider}`);
 
-    // Simulate a file change by manually triggering translation
+    // Safely trigger manual translation (retry if watcher is processing)
     console.log('\n🔄 Manually triggering translation...');
-    const result = await manager.translateFile(
-      path.join(config.watchPath, 'en.json')
+    const result = await translateFileWithRetry(
+      manager,
+      path.join(config.watchPath, 'en.json'),
+      20000
     );
 
     console.log('\n📋 Translation Result:');
@@ -119,6 +127,11 @@ async function runDemo() {
   } catch (error) {
     console.error('❌ Demo failed:', error);
     process.exit(1);
+  } finally {
+    // Always stop the mock server
+    console.log('\n🛑 Stopping mock server...');
+    await mockServer.stop();
+    console.log('✅ Mock server stopped');
   }
 }
 
@@ -138,9 +151,9 @@ async function createTestFiles(config: Config) {
       welcome: 'Welcome to our application',
       hello: 'Hello, how are you?',
       goodbye: 'Goodbye, see you later!',
-      'common.buttons.save': 'Save',
-      'common.buttons.cancel': 'Cancel',
-      'common.buttons.submit': 'Submit',
+      'Welcome to our application': 'Save',
+      'Hello, how are you?': 'Cancel',
+      'Goodbye, see you later!': 'Submit',
     };
 
     await fs.writeFile(baseLangPath, JSON.stringify(baseLangContent, null, 2));
@@ -153,9 +166,9 @@ async function createTestFiles(config: Config) {
         welcome: '', // Empty - needs translation
         hello: '', // Empty - needs translation
         goodbye: '', // Empty - needs translation
-        'common.buttons.save': '', // Empty - needs translation
-        'common.buttons.cancel': '', // Empty - needs translation
-        'common.buttons.submit': '', // Empty - needs translation
+        'Welcome to our application': '', // Empty - needs translation
+        'Hello, how are you?': '', // Empty - needs translation
+        'Goodbye, see you later!': '', // Empty - needs translation
       };
 
       await fs.writeFile(
@@ -170,8 +183,39 @@ async function createTestFiles(config: Config) {
   }
 }
 
-// Run the demo if this file is executed directly
-if (require.main === module) {
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitUntilIdle(manager: AutoTranslator, timeoutMs = 20000) {
+  const start = Date.now();
+  while (manager['isTranslating'] && manager['isTranslating']()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('Timeout waiting for translation to finish');
+    }
+    await sleep(200);
+  }
+}
+
+async function translateFileWithRetry(
+  autoTranslator: AutoTranslator,
+  filePath: string,
+  timeoutMs = 20000
+) {
+  try {
+    return await autoTranslator.translateFile(filePath);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('Translation already in progress')) {
+      await waitUntilIdle(autoTranslator, timeoutMs);
+      return await autoTranslator.translateFile(filePath);
+    }
+    throw error;
+  }
+}
+
+// Run the demo if this file is executed directly (ESM-compatible check)
+if (import.meta.url === `file://${process.argv[1]}`) {
   runDemo().catch(console.error);
 }
 
